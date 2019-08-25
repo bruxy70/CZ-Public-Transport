@@ -46,6 +46,7 @@ sensor:
 | `origin` | No | Name of the originating bus stop
 | `destination` | No | Name of the destination bus stop
 | `combination_id` | Yes | Name of the combination of connections. **Default**: `ABCz`
+| `user_id` | Yes | ...if you have one (if you do, please let me know where you got it. Thanks!). Otherwise it will use the trial account. 
 
 ## STATE AND ATTRIBUTES
 ### State

@@ -22,6 +22,7 @@ ICON_BUS = "mdi:bus"
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
 CONF_NAME = "name"
+CONF_USERID = "userId"
 
 CONF_COMBINATION_ID = "combination_id"
 DEFAULT_COMBINATION_ID = "ABCz"
@@ -37,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_COMBINATION_ID, default=DEFAULT_COMBINATION_ID): cv.string,
+    vol.Optional(CONF_USERID,default=""): cv.string,
 })
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -50,17 +52,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     destination = config[CONF_DESTINATION]
     name = config.get(CONF_NAME)
     combination_id = config.get(CONF_COMBINATION_ID)
-    add_devices([IdosSensor(hass, name, origin, destination,combination_id)])
+    user_id = config.get(CONF_USERID)
+    add_devices([IdosSensor(hass, name, origin, destination,combination_id,user_id)])
 
 class IdosSensor(Entity):
     """Representation of a openroute service travel time sensor."""
-    def __init__(self, hass, name, origin, destination,combination_id):
+    def __init__(self, hass, name, origin, destination,combination_id,user_id):
         """Initialize the sensor."""
         self._hass = hass
         self._name = name
         self._origin = origin
         self._destination = destination
         self._combination_id = combination_id
+        self._user_id = user_id
         self._combination_guid = None
         self._guid_valid_to = None
         self._lastupdated = None
@@ -114,12 +118,19 @@ class IdosSensor(Entity):
             url_combination  = 'https://ext.crws.cz/api/'
             combination_decoded = {}
             _LOGGER.info( "(" + self._name + ") Updating CombinationInfo guid")
-            _LOGGER.debug( "(" + self._name + ") url - " + url_combination)
-
-            try:
-                combination_response = get(url_combination)
-            except:
-                _LOGGER.info( "(" + self._name + ") Exception reading guid data")
+            if self._user_id=="":
+                try:
+                    combination_response = get(url_combination)
+                    _LOGGER.debug( "(" + self._name + ") url - " + combination_response.url)
+                except:
+                    _LOGGER.info( "(" + self._name + ") Exception reading guid data")
+            else:
+                payload= {'userId':self._user_id}
+                try:
+                    combination_response = get(url_combination,params=payload)
+                    _LOGGER.debug( "(" + self._name + ") url - " + combination_response.url)
+                except:
+                    _LOGGER.info( "(" + self._name + ") Exception reading guid data")
 
             if combination_response.status_code == 200:
                 combination_json_input = combination_response.text
@@ -159,11 +170,15 @@ class IdosSensor(Entity):
                     update_connection = False
 
         if update_connection:
-            url_connection = "https://ext.crws.cz/api/"+self._combination_guid+"/connections?from="+self._origin+"&to="+self._destination
-            _LOGGER.info( "(" + self._name + ") Checking connection from "+ self._origin+" to "+self._destination)
-            _LOGGER.debug( "(" + self._name + ") url - " + url_connection)
+            url_connection = "https://ext.crws.cz/api/"+self._combination_guid+"/connections"
+            if self._user_id=="":
+                payload= {'from':self._origin, 'to':self._destination}
+            else:
+                payload= {'from':self._origin, 'to':self._destination,'userId':self._user_id}
+            _LOGGER.info( "(" + self._name + ") Checking connection from "+ self._origin+" to "+self._destination)            
             try:
-                connection_response = get(url_connection)
+                connection_response = get(url_connection,params=payload)
+                _LOGGER.debug( "(" + self._name + ") url - " + connection_response.url)
             except:
                 _LOGGER.error( "(" + self._name + ") Exception reading connection data")
 
