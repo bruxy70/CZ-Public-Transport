@@ -1,0 +1,8 @@
+{
+  "domain": "idos",
+  "name": "idos",
+  "documentation": "https://github.com/bruxy70/idos/",
+  "dependencies": [],
+  "codeowners": ["@bruxy70"],
+  "requirements": []
+}
