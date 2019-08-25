@@ -45,7 +45,7 @@ sensor:
 | `name` | Yes | Sensor friendly name. **Default**: idos
 | `origin` | No | Name of the originating bus stop
 | `destination` | No | Name of the destination bus stop
-| `combination_id | Yes | Name of the combination of connections. **Default**: `ABCz`
+| `combination_id` | Yes | Name of the combination of connections. **Default**: `ABCz`
 
 ## STATE AND ATTRIBUTES
 ### State
