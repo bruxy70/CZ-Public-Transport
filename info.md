@@ -1,4 +1,4 @@
-# idos
+# IDOS (Informační DOpravní Systém)
 
 The `idos` component is a Home Assistant custom sensor that finds Czech Public Transport connections. It uses test version of CRWS - an REST API managed by CHAPS s.r.o. The test version is unfortunately limited to limited combinations of connections - ABCz, witch is PID (Pražská Integrovaná Doprava) without trains, and trains. The full version would require client ID, but CHAPS does not provide that to public as far as I know. I did write them an email about my intention to write this sensor, but they dod not respond. 
 
@@ -28,3 +28,6 @@ The next connection short description in format *time (bus line)*. If there are 
 | `connections` | List of the connections to take (or simply line number if this is a direct connection)
 | `duration` | Trip duration
 | `description` | Full description of the plan - each connection on one line, in the format *line time (bus stop to get-in) -> time (bus stop to get-off)*
+
+---
+<a href="https://www.buymeacoffee.com/3nXx0bJDP" target="_blank"><img src="https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
