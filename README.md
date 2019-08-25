@@ -23,7 +23,7 @@ The `idos` component is a Home Assistant custom sensor that finds Czech Public T
 
 ### INSTALLATION VIA HACS
 1. Ensure that [HACS](https://custom-components.github.io/hacs/) is installed.
-2. Search for and install the "Garbage Collection" integration.
+2. Search for and install the "idos" integration.
 3. Configure the `idos` sensor.
 4. Restart Home Assistant.
 
@@ -45,6 +45,7 @@ sensor:
 | `name` | Yes | Sensor friendly name. **Default**: idos
 | `origin` | No | Name of the originating bus stop
 | `destination` | No | Name of the destination bus stop
+| `combination_id | Yes | Name of the combination of connections. **Default**: `ABCz`
 
 ## STATE AND ATTRIBUTES
 ### State
