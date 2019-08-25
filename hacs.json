@@ -1,3 +1,5 @@
 {
-  "name": "IDOS"
+  "name": "IDOS",
+  "domains": ["idos", "sensor"],
+  "iot_class": "Cloud Polling"
 }
