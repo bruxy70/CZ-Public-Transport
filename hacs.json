@@ -1,5 +1,6 @@
 {
   "name": "IDOS (Informační DOpravní Systém)",
   "domains": ["idos", "sensor"],
+  "country": "CZ",
   "iot_class": "Cloud Polling"
 }
