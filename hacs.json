@@ -1,6 +1,6 @@
 {
-  "name": "IDOS (Informační DOpravní Systém)",
-  "domains": ["idos", "sensor"],
+  "name": "CZ Public Transport",
+  "domains": ["cz_pub_tran", "sensor"],
   "country": "CZ",
   "iot_class": "Cloud Polling"
 }

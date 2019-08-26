@@ -14,25 +14,25 @@ The `CZ-Public-Transport` component is a Home Assistant custom sensor that finds
 
 ### MANUAL INSTALLATION
 1. Download the
-   [latest release](https://github.com/bruxy70/idos/releases/latest).
-2. Unpack the release and copy the `custom_components/idos` directory
+   [latest release](https://github.com/bruxy70/CZ-Public-Transport/releases/latest).
+2. Unpack the release and copy the `custom_components/cz_pub_tran` directory
    into the `custom_components` directory of your Home Assistant
    installation.
-3. Configure the `idos` sensor.
+3. Configure the `cz_pub_tran` sensor.
 4. Restart Home Assistant.
 
 ### INSTALLATION VIA HACS
 1. Ensure that [HACS](https://custom-components.github.io/hacs/) is installed.
-2. Search for and install the "idos" integration.
-3. Configure the `idos` sensor.
+2. Search for and install the "CZ Public Transport" integration.
+3. Configure the `cz_pub_tran` sensor.
 4. Restart Home Assistant.
 
 ## Configuration
-Add `idos` sensor in your `configuration.yaml` as per the example below:
+Add `cz_pub_tran` sensor in your `configuration.yaml` as per the example below:
 ```yaml
 # Example configuration.yaml entry
 sensor:
-  - platform: idos
+  - platform: cz_pub_tran
     name: cernosice_florenc
     origin: "Cernosice, zel.zast."
     destination: "Florenc"
@@ -41,8 +41,8 @@ sensor:
 ### CONFIGURATION PARAMETERS
 | Attribute | Optional | Description
 |:---------|-----------|-----------
-| `platform` | No | `idos`
-| `name` | Yes | Sensor friendly name. **Default**: idos
+| `platform` | No | `cz_pub_tran`
+| `name` | Yes | Sensor friendly name. **Default**: cz_pub_tran
 | `origin` | No | Name of the originating bus stop
 | `destination` | No | Name of the destination bus stop
 | `combination_id` | Yes | Name of the combination of connections. **Default**: `ABCz`

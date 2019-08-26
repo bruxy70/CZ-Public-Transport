@@ -1,4 +1,4 @@
-"""Support for IDOS sensors."""
+"""Support for cz_pub_tran sensors."""
 import logging, json, requests
 from requests import get
 from datetime import datetime, date, time, timedelta
@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "idos"
+DEFAULT_NAME = "cz_pub_tran"
 
 ICON_BUS = "mdi:bus"
 
@@ -53,9 +53,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     combination_id = config.get(CONF_COMBINATION_ID)
     user_id = config.get(CONF_USERID)
-    add_devices([IdosSensor(hass, name, origin, destination,combination_id,user_id)])
+    add_devices([CZPubTranSensor(hass, name, origin, destination,combination_id,user_id)])
 
-class IdosSensor(Entity):
+class CZPubTranSensor(Entity):
     """Representation of a openroute service travel time sensor."""
     def __init__(self, hass, name, origin, destination,combination_id,user_id):
         """Initialize the sensor."""

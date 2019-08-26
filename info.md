@@ -7,11 +7,23 @@ The `CZ-Public-Transport` component is a Home Assistant custom sensor that finds
   + [Configuration Parameters](#configuration-parameters)
 * [State and Attributes](#state-and-attributes)
 
+
+## Configuration
+Add `cz_pub_tran` sensor in your `configuration.yaml` as per the example below:
+```yaml
+# Example configuration.yaml entry
+sensor:
+  - platform: cz_pub_tran
+    name: cernosice_florenc
+    origin: "Cernosice, zel.zast."
+    destination: "Florenc"
+```
+
 ### CONFIGURATION PARAMETERS
 | Attribute | Optional | Description
 |:---------|-----------|-----------
-| `platform` | No | `idos`
-| `name` | Yes | Sensor friendly name. **Default**: idos
+| `platform` | No | `cz_pub_tran`
+| `name` | Yes | Sensor friendly name. **Default**: cz_pub_tran
 | `origin` | No | Name of the originating bus stop
 | `destination` | No | Name of the destination bus stop
 | `combination_id` | Yes | Name of the combination of connections. **Default**: `ABCz`
