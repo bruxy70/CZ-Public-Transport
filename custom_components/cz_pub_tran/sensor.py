@@ -211,7 +211,7 @@ class CZPubTranSensor(Entity):
                                 first=False
                             else:
                                 connections_short=connections_short+"-"+depStation.replace(" (PZ)","")+"-"+line
-                                connections_long=connections_long+"</br>\n"+line+" "+depTime+" ("+depStation+") -> "+arrTime+" ("+arrStation+")"
+                                connections_long=connections_long+"\n"+line+" "+depTime+" ("+depStation+") -> "+arrTime+" ("+arrStation+")"
                         self._state = self._departure+" ("+connections_short+")"
                         self._connections = connections_short
                         self._description = connections_long
