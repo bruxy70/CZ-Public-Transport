@@ -33,6 +33,8 @@ sensor:
 ### State
 The next connection short description in format *time (bus line)*. If there are line changes to be made, the status will only show the first connection (see attribute description for the complete plan)
 
+<img src="https://github.com/bruxy70/CZ-Public-Transport/blob/master/images/connection.png">
+
 ### Attributes
 | Attribute | Description
 |:---------|-----------
