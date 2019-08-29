@@ -30,10 +30,11 @@ sensor:
 | `user_id` | Yes | ...if you have one (if you do, please let me know where you got it. Thanks!). Otherwise it will use the trial account. 
 
 ## STATE AND ATTRIBUTES
-### State
-The next connection short description in format *time (bus line)*. If there are line changes to be made, the status will only show the first connection (see attribute description for the complete plan)
 
 <img src="https://github.com/bruxy70/CZ-Public-Transport/blob/master/images/connection.png">
+
+### State
+The next connection short description in format *time (bus line)*. If there are line changes to be made, the status will only show the first connection (see attribute description for the complete plan)
 
 ### Attributes
 | Attribute | Description
