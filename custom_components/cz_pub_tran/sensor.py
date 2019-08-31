@@ -5,7 +5,6 @@ from datetime import datetime, date, time, timedelta
 
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.util import Throttle
 from homeassistant.const import (
     CONF_NAME
 )
@@ -46,14 +45,14 @@ THROTTLE_INTERVAL = timedelta(seconds=60)
 
 TRACKABLE_DOMAINS = ["sensor"]
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Setup the sensor platform."""
     origin = config[CONF_ORIGIN]
     destination = config[CONF_DESTINATION]
     name = config.get(CONF_NAME)
     combination_id = config.get(CONF_COMBINATION_ID)
     user_id = config.get(CONF_USERID)
-    add_devices([CZPubTranSensor(name, origin, destination,combination_id,user_id)])
+    async_add_entities([CZPubTranSensor(name, origin, destination,combination_id,user_id)],True)
 
 class CZPubTranSensor(Entity):
     """Representation of a openroute service travel time sensor."""
@@ -97,13 +96,12 @@ class CZPubTranSensor(Entity):
     @property
     def icon(self):
         return ICON_BUS
-
-    @Throttle(THROTTLE_INTERVAL)
-    def update(self):
+    
+    async def async_update(self):
         """ Call the do_update function based on scan interval and throttle    """
-        self.do_update("Scan Interval")
+        await self.do_update("Scan Interval")
 
-    def do_update(self, reason):
+    async def do_update(self, reason):
         """Get the latest data and updates the states."""
         _LOGGER.info( "(" + self._name + ") Calling update due to " + reason )
 
