@@ -53,13 +53,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     combination_id = config.get(CONF_COMBINATION_ID)
     user_id = config.get(CONF_USERID)
-    add_devices([CZPubTranSensor(hass, name, origin, destination,combination_id,user_id)])
+    add_devices([CZPubTranSensor(name, origin, destination,combination_id,user_id)])
 
 class CZPubTranSensor(Entity):
     """Representation of a openroute service travel time sensor."""
-    def __init__(self, hass, name, origin, destination,combination_id,user_id):
+    def __init__(self, name, origin, destination,combination_id,user_id):
         """Initialize the sensor."""
-        self._hass = hass
         self._name = name
         self._origin = origin
         self._destination = destination
