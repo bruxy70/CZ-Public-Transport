@@ -2,11 +2,7 @@
 
 The `CZ-Public-Transport` component is a Home Assistant custom sensor that finds Public Transport connections in the Czech Republic. It uses test version of CRWS - an REST API managed by CHAPS s.r.o. The test version is unfortunately limited to limited combinations of connections - ABCz, witch is PID (Pražská Integrovaná Doprava) without trains, and trains. The full version would require client ID, but CHAPS does not provide that to public as far as I know. I did write them an email about my intention to write this sensor, but they dod not respond. 
 
-## Table of Contents
-* [Configuration](#configuration)
-  + [Configuration Parameters](#configuration-parameters)
-* [State and Attributes](#state-and-attributes)
-
+<img src="https://github.com/bruxy70/CZ-Public-Transport/blob/master/images/connection.png">
 
 ## Configuration
 Add `cz_pub_tran` sensor in your `configuration.yaml` as per the example below:
@@ -30,8 +26,6 @@ sensor:
 | `user_id` | Yes | ...if you have one (if you do, please let me know where you got it. Thanks!). Otherwise it will use the trial account. 
 
 ## STATE AND ATTRIBUTES
-
-<img src="https://github.com/bruxy70/CZ-Public-Transport/blob/master/images/connection.png">
 
 ### State
 The next connection short description in format *time (bus line)*. If there are line changes to be made, the status will only show the first connection (see attribute description for the complete plan)
