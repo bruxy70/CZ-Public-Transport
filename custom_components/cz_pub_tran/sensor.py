@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SCAN_INTERVAL = timedelta(seconds=60)
-THROTTLE_INTERVAL = timedelta(seconds=5)
+THROTTLE_INTERVAL = timedelta(seconds=60)
 HTTP_TIMEOUT = 5
 
 TRACKABLE_DOMAINS = ["sensor"]
@@ -112,7 +112,6 @@ class CZPubTranSensor(Entity):
         now=datetime.now().time()
         if self._combination_guid == None or self._guid_valid_to <= today:
             await self.async_update_CombinationInfo()
-            await self.async_update_Connection()
         else:
             _LOGGER.debug( "(" + self._name + ") guid valid until " + self._guid_valid_to.strftime("%d-%m-%Y") + " - not updating")
             if self._departure == "":
