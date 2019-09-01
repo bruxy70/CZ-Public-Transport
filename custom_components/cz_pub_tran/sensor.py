@@ -174,8 +174,6 @@ class CZPubTranSensor(Entity):
             payload= {'from':self._origin, 'to':self._destination,'userId':self._user_id}
         _LOGGER.info( "(" + self._name + ") Checking connection from "+ self._origin+" to "+self._destination)            
         session = async_get_clientsession(self.hass)
-        self._combination_guid = None
-        self._guid_valid_to = None
         try:
             with async_timeout.timeout(HTTP_TIMEOUT):            
                 connection_response = await session.get(url_connection,params=payload)
