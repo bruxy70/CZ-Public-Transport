@@ -20,7 +20,6 @@ ICON_BUS = "mdi:bus"
 
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
-CONF_NAME = "name"
 CONF_USERID = "userId"
 
 CONF_COMBINATION_ID = "combination_id"
