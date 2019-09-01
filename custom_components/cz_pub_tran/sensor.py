@@ -5,6 +5,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import async_timeout
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME
@@ -40,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SCAN_INTERVAL = timedelta(seconds=60)
-THROTTLE_INTERVAL = timedelta(seconds=60)
+THROTTLE_INTERVAL = timedelta(seconds=5)
 HTTP_TIMEOUT = 5
 
 TRACKABLE_DOMAINS = ["sensor"]
@@ -104,6 +105,7 @@ class CZPubTranSensor(Entity):
     def icon(self):
         return ICON_BUS
     
+    @Throttle(THROTTLE_INTERVAL)
     async def async_update(self):
         """ Call the do_update function based on scan interval and throttle    """
         today=datetime.now().date()
