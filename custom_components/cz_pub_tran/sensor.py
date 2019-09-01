@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SCAN_INTERVAL = timedelta(seconds=60)
-THROTTLE_INTERVAL = timedelta(seconds=60)
+THROTTLE_INTERVAL = timedelta(seconds=10)
 HTTP_TIMEOUT = 5
 
 TRACKABLE_DOMAINS = ["sensor"]
@@ -122,7 +122,6 @@ class CZPubTranSensor(Entity):
                     await self.async_update_Connection()
                 else:
                     _LOGGER.info( "(" + self._name + ") departure already secheduled for "+ self._departure +" - not checking connections")
-
 
     async def async_update_CombinationInfo(self):
         url_combination  = 'https://ext.crws.cz/api/'
