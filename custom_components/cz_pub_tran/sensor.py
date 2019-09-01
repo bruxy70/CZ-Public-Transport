@@ -41,9 +41,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SCAN_INTERVAL = timedelta(seconds=60)
-THROTTLE_INTERVAL = timedelta(seconds=60)
+THROTTLE_INTERVAL = timedelta(seconds=10)
 
 TRACKABLE_DOMAINS = ["sensor"]
+
+class ErrorGettingData(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
@@ -100,137 +107,120 @@ class CZPubTranSensor(Entity):
     @Throttle(THROTTLE_INTERVAL)
     def update(self):
         """ Call the do_update function based on scan interval and throttle    """
-        self.do_update("Scan Interval")
-
-    def do_update(self, reason):
-        """Get the latest data and updates the states."""
-        _LOGGER.info( "(" + self._name + ") Calling update due to " + reason )
-
-        update_guid = True
-        if self._combination_guid != None:
-            today=datetime.now().date()
-            if self._guid_valid_to > today:
-                update_guid = False
-        
-        if update_guid:
-            url_combination  = 'https://ext.crws.cz/api/'
-            combination_decoded = {}
-            _LOGGER.info( "(" + self._name + ") Updating CombinationInfo guid")
-            if self._user_id=="":
-                try:
-                    combination_response = get(url_combination)
-                    _LOGGER.debug( "(" + self._name + ") url - " + combination_response.url)
-                except:
-                    _LOGGER.info( "(" + self._name + ") Exception reading guid data")
-            else:
-                payload= {'userId':self._user_id}
-                try:
-                    combination_response = get(url_combination,params=payload)
-                    _LOGGER.debug( "(" + self._name + ") url - " + combination_response.url)
-                except:
-                    _LOGGER.info( "(" + self._name + ") Exception reading guid data")
-
-            if combination_response.status_code == 200:
-                combination_json_input = combination_response.text
-                # _LOGGER.debug( "(" + self._name + ") response - " + combination_json_input)
-                combination_decoded = json.loads(combination_json_input)
-                if "data" in combination_decoded:
-                    try:
-                        for combination in combination_decoded["data"]:
-                            if combination["id"] == self._combination_id:
-                                self._combination_guid = combination["guid"]
-                                self._guid_valid_to = datetime.strptime(combination["ttValidTo"], "%d.%m.%Y").date()
-                                _LOGGER.debug( "(" + self._name + ") found guid - " + self._combination_guid +" valid to "+self._guid_valid_to.strftime("%d-%m-%Y"))
-                    except:
-                        _LOGGER.error( "(" + self._name + ") Exception parsing guid")
-                else:
-                    _LOGGER.error( "(" + self._name + ") Reading guid - API returned no data")
-            else:
-                _LOGGER.error( "(" + self._name + ") Reading guid - API returned code " + str(combination_response.status_code))
+        today=datetime.now().date()
+        now=datetime.now().time()
+        if self._combination_guid == None or self._guid_valid_to <= today:
+            self.update_CombinationInfo()
+            self.update_Connection()
         else:
             _LOGGER.debug( "(" + self._name + ") guid valid until " + self._guid_valid_to.strftime("%d-%m-%Y") + " - not updating")
-        
-        update_connection = True
-        if self._combination_guid == None:
-            _LOGGER.error( "(" + self._name + ") No CombinationInfo guid - not checking connections")
-            update_connection = False
+            if self._departure == "":
+                self.update_Connection()
+            else:
+                departure_time=datetime.strptime(self._departure,"%H:%M").time()
+                if now > departure_time and (now.hour <= 22 or departure_time.hour >= 5):
+                    self.update_Connection()
+                else:
+                    _LOGGER.info( "(" + self._name + ") departure already scheduled for "+ self._departure +" - not checking connections")
+
+    def update_CombinationInfo(self):
+        url_combination  = 'https://ext.crws.cz/api/'
+        _LOGGER.info( "(" + self._name + ") Updating CombinationInfo guid")
+        self._combination_guid = None
+        self._guid_valid_to = None
+        if self._user_id=="":
+            payload = {}
+        else:
+            payload= {'userId':self._user_id}
+        self._combination_guid = None
+        self._guid_valid_to = None
+        try:
+            combination_response = get(url_combination,params=payload)
+            if combination_response is None:
+                raise ErrorGettingData('No response')
+            _LOGGER.debug( "(" + self._name + ") url - " + str(combination_response.url))
+            if combination_response.status_code != 200:
+                raise ErrorGettingData('API returned response code '+str(combination_response.status_code)+" ("+combination_response.text+")" )
+            combination_decoded = combination_response.json()
+            if combination_decoded is None:
+                raise ErrorGettingData('Error passing the JSON response')
+            if "data" not in combination_decoded:
+                raise ErrorGettingData('API returned no data')
+            for combination in combination_decoded["data"]:
+                if combination["id"] == self._combination_id:
+                    self._combination_guid = combination["guid"]
+                    self._guid_valid_to = datetime.strptime(combination["ttValidTo"], "%d.%m.%Y").date()
+                    _LOGGER.debug( "(" + self._name + ") found guid - " + self._combination_guid +" valid till "+self._guid_valid_to.strftime("%d-%m-%Y"))
+        except ErrorGettingData as e:
+            _LOGGER.error( "(" + self._name + ") Error getting CombinatonInfo: "+ e.value)
+        except:
+            _LOGGER.error( "(" + self._name + ") Exception reading guid data")
+        if self._combination_guid is None:
             self._state = ""
             self._duration = ""
             self._departure = ""
             self._connections = ""
             self._description = ""
+
+    def update_Connection(self):
+        if self._combination_guid is None:
+            return
+        url_connection = "https://ext.crws.cz/api/"+self._combination_guid+"/connections"        
+        if self._user_id=="":
+            payload= {'from':self._origin, 'to':self._destination}
         else:
-            if self._departure != "":
-                now=datetime.now().time()
-                departure_time=datetime.strptime(self._departure,"%H:%M").time()
-                if now < departure_time or (now.hour>=22 and departure_time.hour<=5):
-                    _LOGGER.info( "(" + self._name + ") departure already secheduled for "+ self._departure +" - not checking connections")
-                    update_connection = False
+            payload= {'from':self._origin, 'to':self._destination,'userId':self._user_id}
+        _LOGGER.info( "(" + self._name + ") Checking connection from "+ self._origin+" to "+self._destination)            
+        try:
+            connection_response = get(url_connection,params=payload)
+            if connection_response is None:
+                raise ErrorGettingData('No response')
+            _LOGGER.debug( "(" + self._name + ") url - " + str(connection_response.url))
+            if connection_response.status_code != 200:
+                raise ErrorGettingData('API returned response code '+str(connection_response.status_code)+" ("+connection_response.text+")")
+            connection_decoded = connection_response.json()
+            if connection_decoded is None:
+                raise ErrorGettingData('Error passing the JSON response')
+            if "handle" not in connection_decoded:
+                raise ErrorGettingData('Did not find any connection from '+self._origin+" to "+self._destination)
 
-        if update_connection:
-            url_connection = "https://ext.crws.cz/api/"+self._combination_guid+"/connections"
-            if self._user_id=="":
-                payload= {'from':self._origin, 'to':self._destination}
-            else:
-                payload= {'from':self._origin, 'to':self._destination,'userId':self._user_id}
-            _LOGGER.info( "(" + self._name + ") Checking connection from "+ self._origin+" to "+self._destination)            
-            try:
-                connection_response = get(url_connection,params=payload)
-                _LOGGER.debug( "(" + self._name + ") url - " + connection_response.url)
-            except:
-                _LOGGER.error( "(" + self._name + ") Exception reading connection data")
-
-            if connection_response.status_code == 200:
-                connection_json_input = connection_response.text
-                # _LOGGER.debug( "(" + self._name + ") response - " + connection_json_input)
-                connection_decoded = json.loads(connection_json_input)
-
-                if "handle" in connection_decoded:
-                    try:
-                        connection = connection_decoded["connInfo"]["connections"][0]
-                        _LOGGER.info( "(" + self._name + ") connection from "+self._origin+" to "+self._destination+ ": id"+str(connection["id"]))
-                        self._duration = connection["timeLength"]
-                        self._departure = connection["trains"][0]["trainData"]["route"][0]["depTime"]
-                        connections_short=""
-                        connections_long=""
-                        first=True
-                        for trains in connection["trains"]:
-                            line=str(trains["trainData"]["info"]["num1"])
-                            depTime=trains["trainData"]["route"][0]["depTime"]
-                            depStation=trains["trainData"]["route"][0]["station"]["name"]
-                            if "arrTime" in trains["trainData"]["route"][1]:
-                                arrTime=trains["trainData"]["route"][1]["arrTime"]
-                            else:
-                                arrTime=trains["trainData"]["route"][1]["depTime"]
-                            arrStation=trains["trainData"]["route"][1]["station"]["name"]
-                            if first:
-                                connections_short=line
-                                connections_long=line+" "+depTime+" ("+depStation+") -> "+arrTime+" ("+arrStation+")"
-                                first=False
-                            else:
-                                connections_short=connections_short+"-"+depStation.replace(" (PZ)","")+"-"+line
-                                connections_long=connections_long+"\n"+line+" "+depTime+" ("+depStation+") -> "+arrTime+" ("+arrStation+")"
-                        self._state = self._departure+" ("+connections_short+")"
-                        self._connections = connections_short
-                        self._description = connections_long
-                    except:
-                        _LOGGER.error( "(" + self._name + ") Exception parsing connecton")
-                        self._state = ""
-                        self._duration = ""
-                        self._departure = ""
-                        self._connections = ""
-                        self._description = ""
+            connection = connection_decoded["connInfo"]["connections"][0]
+            _LOGGER.info( "(" + self._name + ") connection from "+self._origin+" to "+self._destination+ ": id"+str(connection["id"]))
+            self._duration = connection["timeLength"]
+            self._departure = connection["trains"][0]["trainData"]["route"][0]["depTime"]
+            connections_short=""
+            connections_long=""
+            first=True
+            for trains in connection["trains"]:
+                line=str(trains["trainData"]["info"]["num1"])
+                depTime=trains["trainData"]["route"][0]["depTime"]
+                depStation=trains["trainData"]["route"][0]["station"]["name"]
+                if "arrTime" in trains["trainData"]["route"][1]:
+                    arrTime=trains["trainData"]["route"][1]["arrTime"]
                 else:
-                    _LOGGER.error( "(" + self._name + ") connection from "+self._origin+" to "+self._destination+ " not found!")
-                    self._state = ""
-                    self._duration = ""
-                    self._departure = ""
-                    self._connections = ""
-                    self._description = ""
-            else:
-                _LOGGER.error( "(" + self._name + ") Reading connection data - API returned code " + str(connection_response.status_code))
-                self._state = ""
-                self._duration = ""
-                self._departure = ""
-                self._connections = ""
-                self._description = ""
+                    arrTime=trains["trainData"]["route"][1]["depTime"]
+                arrStation=trains["trainData"]["route"][1]["station"]["name"]
+                if first:
+                    connections_short=line
+                    connections_long=line+" "+depTime+" ("+depStation+") -> "+arrTime+" ("+arrStation+")"
+                    first=False
+                else:
+                    connections_short=connections_short+"-"+depStation.replace(" (PZ)","")+"-"+line
+                    connections_long=connections_long+"\n"+line+" "+depTime+" ("+depStation+") -> "+arrTime+" ("+arrStation+")"
+            self._state = self._departure+" ("+connections_short+")"
+            self._connections = connections_short
+            self._description = connections_long
+        except ErrorGettingData as e:
+            _LOGGER.error( "(" + self._name + ") Error getting connection: "+ e.value)
+            self._state = ""
+            self._duration = ""
+            self._departure = ""
+            self._connections = ""
+            self._description = ""
+        except:
+            _LOGGER.error( "(" + self._name + ") Exception getting connection data")
+            self._state = ""
+            self._duration = ""
+            self._departure = ""
+            self._connections = ""
+            self._description = ""
