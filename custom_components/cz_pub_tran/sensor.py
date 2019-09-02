@@ -1,21 +1,24 @@
 """Support for cz_pub_tran sensors."""
 import logging, json, requests
-from requests import get
 from datetime import datetime, date, time, timedelta
-
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import async_timeout
+import asyncio
+import random
 import voluptuous as vol
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME
 )
 from homeassistant.core import HomeAssistant, State
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "cz_pub_tran"
+DOMAIN = "cz_pub_tran"
 
 ICON_BUS = "mdi:bus"
 
@@ -42,6 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SCAN_INTERVAL = timedelta(seconds=60)
 THROTTLE_INTERVAL = timedelta(seconds=10)
+HTTP_TIMEOUT = 5
 
 TRACKABLE_DOMAINS = ["sensor"]
 
@@ -51,20 +55,22 @@ class ErrorGettingData(Exception):
     def __str__(self):
         return repr(self.value)
 
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Setup the sensor platform."""
     origin = config[CONF_ORIGIN]
     destination = config[CONF_DESTINATION]
     name = config.get(CONF_NAME)
     combination_id = config.get(CONF_COMBINATION_ID)
     user_id = config.get(CONF_USERID)
-    add_devices([CZPubTranSensor(name, origin, destination,combination_id,user_id)])
+    session = async_get_clientsession(hass)
+    async_add_entities([CZPubTranSensor(session, name, origin, destination,combination_id,user_id)],True)
+
 
 class CZPubTranSensor(Entity):
     """Representation of a openroute service travel time sensor."""
-    def __init__(self, name, origin, destination,combination_id,user_id):
+    def __init__(self, session, name, origin, destination,combination_id,user_id):
         """Initialize the sensor."""
+        self._session = session
         self._name = name
         self._origin = origin
         self._destination = destination
@@ -103,27 +109,36 @@ class CZPubTranSensor(Entity):
     @property
     def icon(self):
         return ICON_BUS
-
+    
     @Throttle(THROTTLE_INTERVAL)
-    def update(self):
+    async def async_update(self):
         """ Call the do_update function based on scan interval and throttle    """
         today=datetime.now().date()
         now=datetime.now().time()
         if self._combination_guid == None or self._guid_valid_to <= today:
-            self.update_CombinationInfo()
-            self.update_Connection()
+            await self.async_update_CombinationInfo()
+            await self.async_update_Connection()
         else:
             _LOGGER.debug( "(" + self._name + ") guid valid until " + self._guid_valid_to.strftime("%d-%m-%Y") + " - not updating")
             if self._departure == "":
-                self.update_Connection()
+                await self.async_update_Connection()
             else:
                 departure_time=datetime.strptime(self._departure,"%H:%M").time()
                 if now > departure_time and (now.hour <= 22 or departure_time.hour >= 5):
-                    self.update_Connection()
+                    await self.async_update_Connection()
                 else:
-                    _LOGGER.info( "(" + self._name + ") departure already scheduled for "+ self._departure +" - not checking connections")
+                    _LOGGER.info( "(" + self._name + ") departure already secheduled for "+ self._departure +" - not checking connections")
 
-    def update_CombinationInfo(self):
+    async def reserve_resource(self):
+        while self.hass.data[DOMAIN]:
+            await asyncio.sleep(random.randrange(2,8,1))
+        self.hass.data[DOMAIN] = True
+        await asyncio.sleep(1)
+    
+    def release_resource(self):
+        self.hass.data[DOMAIN] = False
+
+    async def async_update_CombinationInfo(self):
         url_combination  = 'https://ext.crws.cz/api/'
         _LOGGER.info( "(" + self._name + ") Updating CombinationInfo guid")
         self._combination_guid = None
@@ -134,14 +149,20 @@ class CZPubTranSensor(Entity):
             payload= {'userId':self._user_id}
         self._combination_guid = None
         self._guid_valid_to = None
+
         try:
-            combination_response = get(url_combination,params=payload)
+            # Use traffic light to avoid concurrent access to the website
+            await self.reserve_resource()
+            with async_timeout.timeout(HTTP_TIMEOUT):            
+                combination_response = await self._session.get(url_combination,params=payload)
+            self.release_resource()
+            
             if combination_response is None:
                 raise ErrorGettingData('No response')
             _LOGGER.debug( "(" + self._name + ") url - " + str(combination_response.url))
-            if combination_response.status_code != 200:
-                raise ErrorGettingData('API returned response code '+str(combination_response.status_code)+" ("+combination_response.text+")" )
-            combination_decoded = combination_response.json()
+            if combination_response.status != 200:
+                raise ErrorGettingData('API returned response code '+str(combination_response.status)+" ("+await combination_response.text()+")" )
+            combination_decoded = await combination_response.json()
             if combination_decoded is None:
                 raise ErrorGettingData('Error passing the JSON response')
             if "data" not in combination_decoded:
@@ -162,7 +183,7 @@ class CZPubTranSensor(Entity):
             self._connections = ""
             self._description = ""
 
-    def update_Connection(self):
+    async def async_update_Connection(self):
         if self._combination_guid is None:
             return
         url_connection = "https://ext.crws.cz/api/"+self._combination_guid+"/connections"        
@@ -172,13 +193,18 @@ class CZPubTranSensor(Entity):
             payload= {'from':self._origin, 'to':self._destination,'userId':self._user_id}
         _LOGGER.info( "(" + self._name + ") Checking connection from "+ self._origin+" to "+self._destination)            
         try:
-            connection_response = get(url_connection,params=payload)
+            # Use traffic light to avoid concurrent access to the website
+            await self.reserve_resource()
+            with async_timeout.timeout(HTTP_TIMEOUT):            
+                connection_response = await self._session.get(url_connection,params=payload)
+            self.release_resource()
+
             if connection_response is None:
                 raise ErrorGettingData('No response')
             _LOGGER.debug( "(" + self._name + ") url - " + str(connection_response.url))
-            if connection_response.status_code != 200:
-                raise ErrorGettingData('API returned response code '+str(connection_response.status_code)+" ("+connection_response.text+")")
-            connection_decoded = connection_response.json()
+            if connection_response.status != 200:
+                raise ErrorGettingData('API returned response code '+str(connection_response.status)+" ("+await connection_response.text()+")")
+            connection_decoded = await connection_response.json()
             if connection_decoded is None:
                 raise ErrorGettingData('Error passing the JSON response')
             if "handle" not in connection_decoded:
