@@ -66,16 +66,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     combination_id = config.get(CONF_COMBINATION_ID)
     user_id = config.get(CONF_USERID)
     session = async_get_clientsession(hass)
-    async_add_entities([CZPubTranSensor(session, name, origin, destination,combination_id,user_id)],True)
+    async_add_entities([CZPubTranSensor(hass, session, name, origin, destination,combination_id,user_id)],True)
 
 
 class CZPubTranSensor(Entity):
     """Representation of a openroute service travel time sensor."""
-    def __init__(self, session, name, origin, destination,combination_id,user_id):
+    def __init__(self, hass, session, name, origin, destination,combination_id,user_id):
         """Initialize the sensor."""
         self._session = session
         self._name = name
-        a = async_generate_entity_id('sensor.{}', name, hass=self.hass)
+        a = async_generate_entity_id('sensor.{}', name, hass=hass)
         _LOGGER.debug( "(" + name + ") generate sensor.enity_id "+ a)
         self._origin = origin
         self._destination = destination
