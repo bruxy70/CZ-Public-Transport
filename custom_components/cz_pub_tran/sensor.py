@@ -7,13 +7,14 @@ import asyncio
 import random
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, slugify
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +26,8 @@ ICON_BUS = "mdi:bus"
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
 CONF_USERID = "userId"
+
+ENTITY_ID_FORMAT = 'sensor.{}'
 
 CONF_COMBINATION_ID = "combination_id"
 DEFAULT_COMBINATION_ID = "ABCz"
@@ -72,6 +75,8 @@ class CZPubTranSensor(Entity):
         """Initialize the sensor."""
         self._session = session
         self._name = name
+        a = async_generate_entity_id('sensor.{}', name, hass=self.hass)
+        _LOGGER.debug( "(" + name + ") generate sensor.enity_id "+ a)
         self._origin = origin
         self._destination = destination
         self._combination_id = combination_id

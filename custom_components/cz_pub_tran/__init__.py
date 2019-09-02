@@ -16,4 +16,9 @@ DOMAIN = 'cz_pub_tran'
 async def async_setup(hass, base_config):
     """Setup the sensor platform."""
     hass.data[DOMAIN] = False
+    _LOGGER.debug( "(cz_pub_tran init) Entity states: "+ str(hass.states.async_entity_ids()))
+    # for sensor in base_config['sensor']:
+    #     if sensor['platform'] == 'cz_pub_tran':
+            # _LOGGER.debug( "(cz_pub_tran init) Found entity: "+ sensor['name'])
+            # _LOGGER.debug( "(cz_pub_tran init) Sensor entity: "+ str(sensor))
     return True
