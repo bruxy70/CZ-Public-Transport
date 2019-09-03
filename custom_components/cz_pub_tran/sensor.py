@@ -3,12 +3,8 @@ from . import Connection
 import logging, json, requests
 from datetime import datetime, date, time, timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import async_timeout
-import asyncio
-import random
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, slugify
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME
@@ -96,106 +92,3 @@ class CZPubTranSensor(Connection):
     @property
     def icon(self):
         return ICON_BUS
-    
-    @Throttle(THROTTLE_INTERVAL)
-    async def async_update(self):
-        """ Call the do_update function based on scan interval and throttle    """
-        today=datetime.now().date()
-        now=datetime.now().time()
-        if not CZPubTranSensor.guid_exist(self._combination_id):
-            await CZPubTranSensor.async_update_CombinationInfo(self._combination_id,self._user_id)
-            await self.async_update_Connection()
-        else:
-            if self._departure == "":
-                await self.async_update_Connection()
-            else:
-                departure_time=datetime.strptime(self._departure,"%H:%M").time()
-                if now > departure_time and (now.hour <= 22 or departure_time.hour >= 5):
-                    await self.async_update_Connection()
-                else:
-                    _LOGGER.debug( "(%s) departure already secheduled for %s - not checking connections", self._name, self._departure)
-
-    async def reserve_resource(self):
-        i=0
-        while self.hass.data[DOMAIN]['traffic_light']:
-            await asyncio.sleep(random.randrange(2,8,1))
-            i=i+1
-            if i==6:
-                return False
-        self.hass.data[DOMAIN]['traffic_light'] = True
-        await asyncio.sleep(1)
-        return True
-    
-    def release_resource(self):
-        self.hass.data[DOMAIN]['traffic_light'] = False
-
-
-    async def async_update_Connection(self):
-
-        if not CZPubTranSensor.guid_exist(self._combination_id):
-            return
-        url_connection = "https://ext.crws.cz/api/"+CZPubTranSensor.guid(self._combination_id)+"/connections"        
-        if self._user_id=="":
-            payload= {'from':self._origin, 'to':self._destination}
-        else:
-            payload= {'from':self._origin, 'to':self._destination,'userId':self._user_id}
-        _LOGGER.debug( "(%s) Checking connection from %s to %s", self._name,self._origin,self._destination)            
-        try:
-            # Use traffic light to avoid concurrent access to the website
-            if not await self.reserve_resource():
-                return
-            with async_timeout.timeout(HTTP_TIMEOUT):            
-                connection_response = await self._session.get(url_connection,params=payload)
-            self.release_resource()
-
-            if connection_response is None:
-                raise ErrorGettingData('No response')
-            _LOGGER.debug( "(%s) url - %s",self._name,str(connection_response.url))
-            if connection_response.status != 200:
-                raise ErrorGettingData('API returned response code '+str(connection_response.status)+" ("+await connection_response.text()+")")
-            connection_decoded = await connection_response.json()
-            if connection_decoded is None:
-                raise ErrorGettingData('Error passing the JSON response')
-            if "handle" not in connection_decoded:
-                raise ErrorGettingData('Did not find any connection from '+self._origin+" to "+self._destination)
-
-            connection = connection_decoded["connInfo"]["connections"][0]
-            _LOGGER.debug( "(%s) connection from %s to %s: found id %s",self._name,self._origin,self._destination,str(connection["id"]))
-            self._duration = connection["timeLength"]
-            self._departure = connection["trains"][0]["trainData"]["route"][0]["depTime"]
-            connections_short=""
-            connections_long=""
-            first=True
-            for trains in connection["trains"]:
-                line=str(trains["trainData"]["info"]["num1"])
-                depTime=trains["trainData"]["route"][0]["depTime"]
-                depStation=trains["trainData"]["route"][0]["station"]["name"]
-                if "arrTime" in trains["trainData"]["route"][1]:
-                    arrTime=trains["trainData"]["route"][1]["arrTime"]
-                else:
-                    arrTime=trains["trainData"]["route"][1]["depTime"]
-                arrStation=trains["trainData"]["route"][1]["station"]["name"]
-                if first:
-                    connections_short=line
-                    connections_long=line+" "+depTime+" ("+depStation+") -> "+arrTime+" ("+arrStation+")"
-                    first=False
-                else:
-                    connections_short=connections_short+"-"+depStation.replace(" (PZ)","")+"-"+line
-                    connections_long=connections_long+"\n"+line+" "+depTime+" ("+depStation+") -> "+arrTime+" ("+arrStation+")"
-            self._state = self._departure+" ("+connections_short+")"
-            self._connections = connections_short
-            self._description = connections_long
-        except ErrorGettingData as e:
-            _LOGGER.error( "(%s) Error getting connection: %s",self._name,e.value)
-            self._state = ""
-            self._duration = ""
-            self._departure = ""
-            self._connections = ""
-            self._description = ""
-        except:
-            _LOGGER.error( "(%s) Exception getting connection data",self._name)
-            self._state = ""
-            self._duration = ""
-            self._departure = ""
-            self._connections = ""
-            self._description = ""
