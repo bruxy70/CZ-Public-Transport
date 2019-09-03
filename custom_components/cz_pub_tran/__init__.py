@@ -8,17 +8,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'cz_pub_tran'
 
 async def async_setup(hass, base_config):
     """Setup the sensor platform."""
-    """Setup the sensor platform."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['traffic_light'] = False
     hass.data[DOMAIN]['combination_ids'] = {}
+    hass.data[DOMAIN]['entity_ids'] = []
     hass.data[DOMAIN]['entities'] = {}
     return True
 
@@ -26,8 +26,11 @@ async def async_setup(hass, base_config):
 class My_Entity(Entity):
     """Representation of a device entity. Will pass to binary_sensor and others"""
 
-    def __init__(self):
+    def __init__(self,hass,name):
         """Initialize the device."""
+        self.entity_id=async_generate_entity_id('sensor.{}',name,hass.data[DOMAIN]['entity_ids'])
+        hass.data[DOMAIN]['entity_ids'].append(self.entity_id)
+        self._name2 = name
         _LOGGER.debug( "(cz_pub_tran init) Entity {} inicialized".format(self.entity_id))
         
     async def async_added_to_hass(self):

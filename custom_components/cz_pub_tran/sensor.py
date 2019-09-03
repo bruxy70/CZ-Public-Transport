@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_NAME
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,12 +64,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     combination_id = config.get(CONF_COMBINATION_ID)
     user_id = config.get(CONF_USERID)
     session = async_get_clientsession(hass)
-    async_add_entities([CZPubTranSensor(session, name, origin, destination,combination_id,user_id)],True)
+    async_add_entities([CZPubTranSensor(hass, session, name, origin, destination,combination_id,user_id)],True)
 
 
 class CZPubTranSensor(My_Entity):
     """Representation of a openroute service travel time sensor."""
-    def __init__(self, session, name, origin, destination,combination_id,user_id):
+    def __init__(self, hass, session, name, origin, destination,combination_id,user_id):
         """Initialize the sensor."""
         self._session = session
         self._name = name
@@ -83,7 +83,7 @@ class CZPubTranSensor(My_Entity):
         self._connections = ""
         self._description = ""
         self._state = ""
-        super().__init__()
+        super().__init__(hass,name)
 
     @property
     def name(self):
@@ -146,6 +146,7 @@ class CZPubTranSensor(My_Entity):
     async def async_update_CombinationInfo(self, today):
         url_combination  = 'https://ext.crws.cz/api/'
         _LOGGER.info( "(" + self._name + ") Updating CombinationInfo guid")
+        _LOGGER.info( "( name2 ) " + self._name2)
         if self._user_id=="":
             payload = {}
         else:
