@@ -16,9 +16,6 @@ HTTP_TIMEOUT = 5
 
 async def async_setup(hass, base_config):
     """Setup the sensor platform."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]['traffic_light'] = False
-    hass.data[DOMAIN]['combination_ids'] = {}
     Connection.session = async_get_clientsession(hass)
     async_call_later(hass,10, Connection.async_update_Connections())
     return True
