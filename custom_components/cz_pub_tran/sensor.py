@@ -91,7 +91,6 @@ class CZPubTranSensor(Connection):
         res[ATTR_DURATION] = self._duration
         res[ATTR_CONNECTIONS] = self._connections
         res[ATTR_DESCRIPTION] = self._description
-        res[ATTR_COMBINATION_GUID] = self._combination_guid
         return res
 
     @property
@@ -103,11 +102,10 @@ class CZPubTranSensor(Connection):
         """ Call the do_update function based on scan interval and throttle    """
         today=datetime.now().date()
         now=datetime.now().time()
-        if self._combination_id not in self.hass.data[DOMAIN]['combination_ids'] or self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'] <= today:
-            await self.async_update_CombinationInfo(today)
+        if not CZPubTranSensor.guid_exist(self._combination_id):
+            await CZPubTranSensor.async_update_CombinationInfo(self._combination_id,self._user_id)
             await self.async_update_Connection()
         else:
-            _LOGGER.debug( "(%s) guid valid until %s - not updating" + self._name, self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'].strftime("%d-%m-%Y"))
             if self._departure == "":
                 await self.async_update_Connection()
             else:
@@ -131,60 +129,12 @@ class CZPubTranSensor(Connection):
     def release_resource(self):
         self.hass.data[DOMAIN]['traffic_light'] = False
 
-    async def async_update_CombinationInfo(self, today):
-        url_combination  = 'https://ext.crws.cz/api/'
-        _LOGGER.debug( "(%s) Updating CombinationInfo guid",self._name)
-        if self._user_id=="":
-            payload = {}
-        else:
-            payload= {'userId':self._user_id}
-        self._combination_guid = None
-        self._guid_valid_to = None
-        try:
-            # Use traffic light to avoid concurrent access to the website
-            if not await self.reserve_resource():
-                return
-            if self._combination_id not in self.hass.data[DOMAIN]['combination_ids'] or self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'] <= today:
-                with async_timeout.timeout(HTTP_TIMEOUT):            
-                    combination_response = await self._session.get(url_combination,params=payload)
-                self.release_resource()
-            else:
-                _LOGGER.debug( "(%s) CombinationInfo guid already fetched by other entity",self._name)
-                self.release_resource()
-                return
-            if combination_response is None:
-                raise ErrorGettingData('No response')
-            _LOGGER.debug( "(%s) url - %s",self._name,str(combination_response.url))
-            if combination_response.status != 200:
-                raise ErrorGettingData('API returned response code '+str(combination_response.status)+" ("+await combination_response.text()+")" )
-            combination_decoded = await combination_response.json()
-            if combination_decoded is None:
-                raise ErrorGettingData('Error passing the JSON response')
-            if "data" not in combination_decoded:
-                raise ErrorGettingData('API returned no data')
-            for combination in combination_decoded["data"]:
-                if combination["id"] == self._combination_id:
-                    self.hass.data[DOMAIN]['combination_ids'][self._combination_id]={}
-                    self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid'] = combination["guid"]
-                    self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to']  = datetime.strptime(combination["ttValidTo"], "%d.%m.%Y").date()
-                    _LOGGER.debug( "(%s) found guid - %s valid till %s", self._name, self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid'],self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'].strftime("%d-%m-%Y"))
-        except ErrorGettingData as e:
-            _LOGGER.error( "(%s) Error getting CombinatonInfo: %s",self._name,e.value)
-            self.hass.data[DOMAIN]['combination_ids'].remove(self._combination_id)
-        except:
-            _LOGGER.error( "(%s) Exception reading guid data",self._name)
-            self.hass.data[DOMAIN]['combination_ids'].remove(self._combination_id)
-        if self._combination_id not in self.hass.data[DOMAIN]['combination_ids']:
-            self._state = ""
-            self._duration = ""
-            self._departure = ""
-            self._connections = ""
-            self._description = ""
 
     async def async_update_Connection(self):
-        if self._combination_id not in self.hass.data[DOMAIN]['combination_ids']:
+
+        if not CZPubTranSensor.guid_exist(self._combination_id):
             return
-        url_connection = "https://ext.crws.cz/api/"+self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid']+"/connections"        
+        url_connection = "https://ext.crws.cz/api/"+CZPubTranSensor.guid(self._combination_id)+"/connections"        
         if self._user_id=="":
             payload= {'from':self._origin, 'to':self._destination}
         else:
