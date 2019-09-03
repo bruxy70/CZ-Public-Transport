@@ -1,4 +1,5 @@
 """Support for cz_pub_tran sensors."""
+from . import My_Entity
 import logging, json, requests
 from datetime import datetime, date, time, timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -15,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "cz_pub_tran"
@@ -26,8 +26,6 @@ ICON_BUS = "mdi:bus"
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
 CONF_USERID = "userId"
-
-ENTITY_ID_FORMAT = 'sensor.{}'
 
 CONF_COMBINATION_ID = "combination_id"
 DEFAULT_COMBINATION_ID = "ABCz"
@@ -66,23 +64,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     combination_id = config.get(CONF_COMBINATION_ID)
     user_id = config.get(CONF_USERID)
     session = async_get_clientsession(hass)
-    async_add_entities([CZPubTranSensor(hass, session, name, origin, destination,combination_id,user_id)],True)
+    async_add_entities([CZPubTranSensor(session, name, origin, destination,combination_id,user_id)],True)
 
 
-class CZPubTranSensor(Entity):
+class CZPubTranSensor(My_Entity):
     """Representation of a openroute service travel time sensor."""
-    def __init__(self, hass, session, name, origin, destination,combination_id,user_id):
+    def __init__(self, session, name, origin, destination,combination_id,user_id):
         """Initialize the sensor."""
         self._session = session
         self._name = name
-        a = async_generate_entity_id('sensor.{}', name, hass=hass)
-        _LOGGER.debug( "(" + name + ") generate sensor.enity_id "+ a)
         self._origin = origin
         self._destination = destination
         self._combination_id = combination_id
         self._user_id = user_id
-        self._combination_guid = None
-        self._guid_valid_to = None
         self._lastupdated = None
         self._duration = ""
         self._departure = ""
@@ -120,11 +114,11 @@ class CZPubTranSensor(Entity):
         """ Call the do_update function based on scan interval and throttle    """
         today=datetime.now().date()
         now=datetime.now().time()
-        if self._combination_guid == None or self._guid_valid_to <= today:
-            await self.async_update_CombinationInfo()
+        if self._combination_id not in self.hass.data[DOMAIN]['combination_ids'] or self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'] <= today:
+            await self.async_update_CombinationInfo(today)
             await self.async_update_Connection()
         else:
-            _LOGGER.debug( "(" + self._name + ") guid valid until " + self._guid_valid_to.strftime("%d-%m-%Y") + " - not updating")
+            _LOGGER.debug( "(" + self._name + ") guid valid until " + self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'].strftime("%d-%m-%Y") + " - not updating")
             if self._departure == "":
                 await self.async_update_Connection()
             else:
@@ -135,33 +129,40 @@ class CZPubTranSensor(Entity):
                     _LOGGER.info( "(" + self._name + ") departure already secheduled for "+ self._departure +" - not checking connections")
 
     async def reserve_resource(self):
-        while self.hass.data[DOMAIN]:
+        i=0
+        while self.hass.data[DOMAIN]['traffic_light']:
             await asyncio.sleep(random.randrange(2,8,1))
-        self.hass.data[DOMAIN] = True
+            i=i+1
+            if i==6:
+                return False
+        self.hass.data[DOMAIN]['traffic_light'] = True
         await asyncio.sleep(1)
+        return True
     
     def release_resource(self):
-        self.hass.data[DOMAIN] = False
+        self.hass.data[DOMAIN]['traffic_light'] = False
 
-    async def async_update_CombinationInfo(self):
+    async def async_update_CombinationInfo(self, today):
         url_combination  = 'https://ext.crws.cz/api/'
         _LOGGER.info( "(" + self._name + ") Updating CombinationInfo guid")
-        self._combination_guid = None
-        self._guid_valid_to = None
         if self._user_id=="":
             payload = {}
         else:
             payload= {'userId':self._user_id}
         self._combination_guid = None
         self._guid_valid_to = None
-
         try:
             # Use traffic light to avoid concurrent access to the website
-            await self.reserve_resource()
-            with async_timeout.timeout(HTTP_TIMEOUT):            
-                combination_response = await self._session.get(url_combination,params=payload)
-            self.release_resource()
-            
+            if not await self.reserve_resource():
+                return
+            if self._combination_id not in self.hass.data[DOMAIN]['combination_ids'] or self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'] <= today:
+                with async_timeout.timeout(HTTP_TIMEOUT):            
+                    combination_response = await self._session.get(url_combination,params=payload)
+                self.release_resource()
+            else:
+                _LOGGER.debug( "(" + self._name + ") CombinationInfo guid alreadt fetched by other entity")
+                self.release_resource()
+                return
             if combination_response is None:
                 raise ErrorGettingData('No response')
             _LOGGER.debug( "(" + self._name + ") url - " + str(combination_response.url))
@@ -174,14 +175,17 @@ class CZPubTranSensor(Entity):
                 raise ErrorGettingData('API returned no data')
             for combination in combination_decoded["data"]:
                 if combination["id"] == self._combination_id:
-                    self._combination_guid = combination["guid"]
-                    self._guid_valid_to = datetime.strptime(combination["ttValidTo"], "%d.%m.%Y").date()
-                    _LOGGER.debug( "(" + self._name + ") found guid - " + self._combination_guid +" valid till "+self._guid_valid_to.strftime("%d-%m-%Y"))
+                    self.hass.data[DOMAIN]['combination_ids'][self._combination_id]={}
+                    self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid'] = combination["guid"]
+                    self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to']  = datetime.strptime(combination["ttValidTo"], "%d.%m.%Y").date()
+                    _LOGGER.debug( "(" + self._name + ") found guid - " + self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid'] +" valid till "+self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'].strftime("%d-%m-%Y"))
         except ErrorGettingData as e:
             _LOGGER.error( "(" + self._name + ") Error getting CombinatonInfo: "+ e.value)
+            self.hass.data[DOMAIN]['combination_ids'].remove(self._combination_id)
         except:
             _LOGGER.error( "(" + self._name + ") Exception reading guid data")
-        if self._combination_guid is None:
+            self.hass.data[DOMAIN]['combination_ids'].remove(self._combination_id)
+        if self._combination_id not in self.hass.data[DOMAIN]['combination_ids']:
             self._state = ""
             self._duration = ""
             self._departure = ""
@@ -189,9 +193,9 @@ class CZPubTranSensor(Entity):
             self._description = ""
 
     async def async_update_Connection(self):
-        if self._combination_guid is None:
+        if self._combination_id not in self.hass.data[DOMAIN]['combination_ids']:
             return
-        url_connection = "https://ext.crws.cz/api/"+self._combination_guid+"/connections"        
+        url_connection = "https://ext.crws.cz/api/"+self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid']+"/connections"        
         if self._user_id=="":
             payload= {'from':self._origin, 'to':self._destination}
         else:
@@ -199,7 +203,8 @@ class CZPubTranSensor(Entity):
         _LOGGER.info( "(" + self._name + ") Checking connection from "+ self._origin+" to "+self._destination)            
         try:
             # Use traffic light to avoid concurrent access to the website
-            await self.reserve_resource()
+            if not await self.reserve_resource():
+                return
             with async_timeout.timeout(HTTP_TIMEOUT):            
                 connection_response = await self._session.get(url_connection,params=payload)
             self.release_resource()

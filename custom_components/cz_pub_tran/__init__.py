@@ -15,10 +15,23 @@ DOMAIN = 'cz_pub_tran'
 
 async def async_setup(hass, base_config):
     """Setup the sensor platform."""
-    hass.data[DOMAIN] = False
-    _LOGGER.debug( "(cz_pub_tran init) Entity states: "+ str(hass.states.async_entity_ids()))
+    """Setup the sensor platform."""
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]['traffic_light'] = False
+    hass.data[DOMAIN]['combination_ids'] = {}
     # for sensor in base_config['sensor']:
     #     if sensor['platform'] == 'cz_pub_tran':
             # _LOGGER.debug( "(cz_pub_tran init) Found entity: "+ sensor['name'])
             # _LOGGER.debug( "(cz_pub_tran init) Sensor entity: "+ str(sensor))
     return True
+
+
+class My_Entity(Entity):
+    """Representation of a device entity. Will pass to binary_sensor and others"""
+
+    def __init__(self, my_device):
+        """Initialize the device."""        
+        
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        _LOGGER.debug( "(cz_pub_tran init) Entity {} added".format(self.entity_id))
