@@ -83,6 +83,7 @@ class CZPubTranSensor(My_Entity):
         self._connections = ""
         self._description = ""
         self._state = ""
+        super().__init__()
 
     @property
     def name(self):

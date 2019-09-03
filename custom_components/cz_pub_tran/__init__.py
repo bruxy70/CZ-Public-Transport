@@ -19,19 +19,28 @@ async def async_setup(hass, base_config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['traffic_light'] = False
     hass.data[DOMAIN]['combination_ids'] = {}
-    # for sensor in base_config['sensor']:
-    #     if sensor['platform'] == 'cz_pub_tran':
-            # _LOGGER.debug( "(cz_pub_tran init) Found entity: "+ sensor['name'])
-            # _LOGGER.debug( "(cz_pub_tran init) Sensor entity: "+ str(sensor))
+    hass.data[DOMAIN]['entities'] = {}
     return True
 
 
 class My_Entity(Entity):
     """Representation of a device entity. Will pass to binary_sensor and others"""
 
-    def __init__(self, my_device):
-        """Initialize the device."""        
+    def __init__(self):
+        """Initialize the device."""
+        _LOGGER.debug( "(cz_pub_tran init) Entity {} inicialized".format(self.entity_id))
         
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities'][self.entity_id] = {}
+        self.hass.data[DOMAIN]['entities'][self.entity_id]['last_updated'] = None
+        self.hass.data[DOMAIN]['entities'][self.entity_id]['data_changed'] = False
+        self.hass.data[DOMAIN]['entities'][self.entity_id]['duration'] = ""
+        self.hass.data[DOMAIN]['entities'][self.entity_id]['departure'] = ""
+        self.hass.data[DOMAIN]['entities'][self.entity_id]['connection'] = ""
+        self.hass.data[DOMAIN]['entities'][self.entity_id]['description'] = ""
+        self.hass.data[DOMAIN]['entities'][self.entity_id]['state'] = ""
+        # self._origin = origin
+        # self._destination = destination
+        # self._combination_id = combination_id
         _LOGGER.debug( "(cz_pub_tran init) Entity {} added".format(self.entity_id))
