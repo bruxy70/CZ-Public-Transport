@@ -18,32 +18,32 @@ async def async_setup(hass, base_config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['traffic_light'] = False
     hass.data[DOMAIN]['combination_ids'] = {}
-    hass.data[DOMAIN]['entity_ids'] = []
-    hass.data[DOMAIN]['entities'] = {}
     return True
 
-
-class My_Entity(Entity):
+class Connection(Entity):
     """Representation of a device entity. Will pass to binary_sensor and others"""
+    entity_ids = []
+    connections = []
 
-    def __init__(self,hass,name):
+    def __init__(self,hass,session, name, origin, destination,combination_id,user_id):
         """Initialize the device."""
-        self.entity_id=async_generate_entity_id('sensor.{}',name,hass.data[DOMAIN]['entity_ids'])
-        hass.data[DOMAIN]['entity_ids'].append(self.entity_id)
-        self._name2 = name
-        _LOGGER.debug( "(cz_pub_tran init) Entity {} inicialized".format(self.entity_id))
+        self._session = session
+        self._name = name
+        self._origin = origin
+        self._destination = destination
+        self._combination_id = combination_id
+        self._user_id = user_id
+        self._lastupdated = None
+        self._duration = ""
+        self._departure = ""
+        self._connections = ""
+        self._description = ""
+        self._state = ""
+        self.entity_id=async_generate_entity_id('sensor.{}',name,Connection.entity_ids)
+        Connection.entity_ids.append(self.entity_id)
+        _LOGGER.debug("Entity %s inicialized",self.entity_id)
         
     async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self.hass.data[DOMAIN]['entities'][self.entity_id] = {}
-        self.hass.data[DOMAIN]['entities'][self.entity_id]['last_updated'] = None
-        self.hass.data[DOMAIN]['entities'][self.entity_id]['data_changed'] = False
-        self.hass.data[DOMAIN]['entities'][self.entity_id]['duration'] = ""
-        self.hass.data[DOMAIN]['entities'][self.entity_id]['departure'] = ""
-        self.hass.data[DOMAIN]['entities'][self.entity_id]['connection'] = ""
-        self.hass.data[DOMAIN]['entities'][self.entity_id]['description'] = ""
-        self.hass.data[DOMAIN]['entities'][self.entity_id]['state'] = ""
-        # self._origin = origin
-        # self._destination = destination
-        # self._combination_id = combination_id
-        _LOGGER.debug( "(cz_pub_tran init) Entity {} added".format(self.entity_id))
+        """I probably do not need this! To be removed! Call when entity is added to hass."""
+        Connection.connections.append(self)
+        _LOGGER.debug( "Entity %s added",self.entity_id)

@@ -1,5 +1,5 @@
 """Support for cz_pub_tran sensors."""
-from . import My_Entity
+from . import Connection
 import logging, json, requests
 from datetime import datetime, date, time, timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -67,23 +67,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([CZPubTranSensor(hass, session, name, origin, destination,combination_id,user_id)],True)
 
 
-class CZPubTranSensor(My_Entity):
+class CZPubTranSensor(Connection):
     """Representation of a openroute service travel time sensor."""
     def __init__(self, hass, session, name, origin, destination,combination_id,user_id):
         """Initialize the sensor."""
-        self._session = session
-        self._name = name
-        self._origin = origin
-        self._destination = destination
-        self._combination_id = combination_id
-        self._user_id = user_id
-        self._lastupdated = None
-        self._duration = ""
-        self._departure = ""
-        self._connections = ""
-        self._description = ""
-        self._state = ""
-        super().__init__(hass,name)
+        super().__init__(hass,session, name, origin, destination,combination_id,user_id)
 
     @property
     def name(self):
@@ -119,7 +107,7 @@ class CZPubTranSensor(My_Entity):
             await self.async_update_CombinationInfo(today)
             await self.async_update_Connection()
         else:
-            _LOGGER.debug( "(" + self._name + ") guid valid until " + self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'].strftime("%d-%m-%Y") + " - not updating")
+            _LOGGER.debug( "(%s) guid valid until %s - not updating" + self._name, self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'].strftime("%d-%m-%Y"))
             if self._departure == "":
                 await self.async_update_Connection()
             else:
@@ -127,7 +115,7 @@ class CZPubTranSensor(My_Entity):
                 if now > departure_time and (now.hour <= 22 or departure_time.hour >= 5):
                     await self.async_update_Connection()
                 else:
-                    _LOGGER.info( "(" + self._name + ") departure already secheduled for "+ self._departure +" - not checking connections")
+                    _LOGGER.debug( "(%s) departure already secheduled for %s - not checking connections", self._name, self._departure)
 
     async def reserve_resource(self):
         i=0
@@ -145,8 +133,7 @@ class CZPubTranSensor(My_Entity):
 
     async def async_update_CombinationInfo(self, today):
         url_combination  = 'https://ext.crws.cz/api/'
-        _LOGGER.info( "(" + self._name + ") Updating CombinationInfo guid")
-        _LOGGER.info( "( name2 ) " + self._name2)
+        _LOGGER.debug( "(%s) Updating CombinationInfo guid",self._name)
         if self._user_id=="":
             payload = {}
         else:
@@ -162,12 +149,12 @@ class CZPubTranSensor(My_Entity):
                     combination_response = await self._session.get(url_combination,params=payload)
                 self.release_resource()
             else:
-                _LOGGER.debug( "(" + self._name + ") CombinationInfo guid alreadt fetched by other entity")
+                _LOGGER.debug( "(%s) CombinationInfo guid already fetched by other entity",self._name)
                 self.release_resource()
                 return
             if combination_response is None:
                 raise ErrorGettingData('No response')
-            _LOGGER.debug( "(" + self._name + ") url - " + str(combination_response.url))
+            _LOGGER.debug( "(%s) url - %s",self._name,str(combination_response.url))
             if combination_response.status != 200:
                 raise ErrorGettingData('API returned response code '+str(combination_response.status)+" ("+await combination_response.text()+")" )
             combination_decoded = await combination_response.json()
@@ -180,12 +167,12 @@ class CZPubTranSensor(My_Entity):
                     self.hass.data[DOMAIN]['combination_ids'][self._combination_id]={}
                     self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid'] = combination["guid"]
                     self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to']  = datetime.strptime(combination["ttValidTo"], "%d.%m.%Y").date()
-                    _LOGGER.debug( "(" + self._name + ") found guid - " + self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid'] +" valid till "+self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'].strftime("%d-%m-%Y"))
+                    _LOGGER.debug( "(%s) found guid - %s valid till %s", self._name, self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid'],self.hass.data[DOMAIN]['combination_ids'][self._combination_id]['guid_valid_to'].strftime("%d-%m-%Y"))
         except ErrorGettingData as e:
-            _LOGGER.error( "(" + self._name + ") Error getting CombinatonInfo: "+ e.value)
+            _LOGGER.error( "(%s) Error getting CombinatonInfo: %s",self._name,e.value)
             self.hass.data[DOMAIN]['combination_ids'].remove(self._combination_id)
         except:
-            _LOGGER.error( "(" + self._name + ") Exception reading guid data")
+            _LOGGER.error( "(%s) Exception reading guid data",self._name)
             self.hass.data[DOMAIN]['combination_ids'].remove(self._combination_id)
         if self._combination_id not in self.hass.data[DOMAIN]['combination_ids']:
             self._state = ""
@@ -202,7 +189,7 @@ class CZPubTranSensor(My_Entity):
             payload= {'from':self._origin, 'to':self._destination}
         else:
             payload= {'from':self._origin, 'to':self._destination,'userId':self._user_id}
-        _LOGGER.info( "(" + self._name + ") Checking connection from "+ self._origin+" to "+self._destination)            
+        _LOGGER.debug( "(%s) Checking connection from %s to %s", self._name,self._origin,self._destination)            
         try:
             # Use traffic light to avoid concurrent access to the website
             if not await self.reserve_resource():
@@ -213,7 +200,7 @@ class CZPubTranSensor(My_Entity):
 
             if connection_response is None:
                 raise ErrorGettingData('No response')
-            _LOGGER.debug( "(" + self._name + ") url - " + str(connection_response.url))
+            _LOGGER.debug( "(%s) url - %s",self._name,str(connection_response.url))
             if connection_response.status != 200:
                 raise ErrorGettingData('API returned response code '+str(connection_response.status)+" ("+await connection_response.text()+")")
             connection_decoded = await connection_response.json()
@@ -223,7 +210,7 @@ class CZPubTranSensor(My_Entity):
                 raise ErrorGettingData('Did not find any connection from '+self._origin+" to "+self._destination)
 
             connection = connection_decoded["connInfo"]["connections"][0]
-            _LOGGER.info( "(" + self._name + ") connection from "+self._origin+" to "+self._destination+ ": id"+str(connection["id"]))
+            _LOGGER.debug( "(%s) connection from %s to %s: found id %s",self._name,self._origin,self._destination,str(connection["id"]))
             self._duration = connection["timeLength"]
             self._departure = connection["trains"][0]["trainData"]["route"][0]["depTime"]
             connections_short=""
@@ -249,14 +236,14 @@ class CZPubTranSensor(My_Entity):
             self._connections = connections_short
             self._description = connections_long
         except ErrorGettingData as e:
-            _LOGGER.error( "(" + self._name + ") Error getting connection: "+ e.value)
+            _LOGGER.error( "(%s) Error getting connection: %s",self._name,e.value)
             self._state = ""
             self._duration = ""
             self._departure = ""
             self._connections = ""
             self._description = ""
         except:
-            _LOGGER.error( "(" + self._name + ") Exception getting connection data")
+            _LOGGER.error( "(%s) Exception getting connection data",self._name)
             self._state = ""
             self._duration = ""
             self._departure = ""
