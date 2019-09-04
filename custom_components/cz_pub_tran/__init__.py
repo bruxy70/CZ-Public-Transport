@@ -1,4 +1,9 @@
-"""Support for cz_pub_tran domain"""
+"""Support for cz_pub_tran domain
+The async_update connections checks all connections every minute
+If the connection is scheduled, it skips the update. 
+But every 5 minutes it updates all connections regardless - to check on delay
+"""
+
 import logging, json, requests
 from datetime import datetime, date, time, timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -12,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'sensor'
 SCAN_INTERVAL = 60
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+FORCED_REFRESH_COUNT = 5
 HTTP_TIMEOUT = 5
 
 async def async_setup(hass, base_config):
@@ -64,13 +70,16 @@ class Connection(Entity):
     hass = None
 
     def scheduled_connection(self):
-        if self._departure == "":
+        if self._departure == "" or self.forced_refresh_countdown <= 0:
+            self.forced_refresh_countdown = FORCED_REFRESH_COUNT
             return False
         departure_time=datetime.strptime(self._departure,"%H:%M").time()
         now=datetime.now().time()
         if now < departure_time or ( now.hour> 22 and departure_time < 6 ):
+            self.forced_refresh_countdown = self.forced_refresh_countdown - 1
             return True
         else:
+            self.forced_refresh_countdown = FORCED_REFRESH_COUNT
             return False
 
     def __init__(self,hass,session, name, origin, destination,combination_id,user_id):
@@ -83,6 +92,7 @@ class Connection(Entity):
         self._combination_id = combination_id
         self._user_id = user_id
         self._lastupdated = None
+        self._forced_refresh_countdown = 0
         self.load_defaults()
         self.entity_id=async_generate_entity_id(ENTITY_ID_FORMAT,name,Connection.entity_ids)
         Connection.entity_ids.append(self.entity_id)
