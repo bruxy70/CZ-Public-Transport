@@ -36,7 +36,8 @@ The next connection short description in format *time (bus line)*. If there are 
 | `departure` | Departure time
 | `connections` | List of the connections to take (or simply line number if this is a direct connection)
 | `duration` | Trip duration
-| `description` | Full description of the plan - each connection on one line, in the format *line time (bus stop to get-in) -> time (bus stop to get-off)*
+| `delay` | Connections that are delayed (with the)
+| `description` | Full description of the plan - each connection on one line, in the format *line time (bus stop to get-in) -> time (bus stop to get-off)   (!!! delay if applicable)*
 
 ---
 <a href="https://www.buymeacoffee.com/3nXx0bJDP" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/white_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
