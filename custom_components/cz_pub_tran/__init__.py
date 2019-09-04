@@ -164,7 +164,7 @@ class Connection(Entity):
                     raise ErrorGettingData(f'Did not find any connection from {entity._origin} to {entity._destination}')
 
                 connection = connection_decoded["connInfo"]["connections"][0]
-                _LOGGER.debug( f"({entity._name}) connection from {entity._origin} to {entity._destination}: found id {str(connection['id']}")
+                _LOGGER.debug( f"({entity._name}) connection from {entity._origin} to {entity._destination}: found id {str(connection['id'])}")
                 entity._duration = connection["timeLength"]
                 entity._departure = connection["trains"][0]["trainData"]["route"][0]["depTime"]
                 connections_short=""
