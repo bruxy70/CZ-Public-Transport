@@ -60,7 +60,7 @@ The next connection short description in format *time (bus line)*. If there are 
 | `departure` | Departure time
 | `connections` | List of the connections to take (or simply line number if this is a direct connection)
 | `duration` | Trip duration
-| `delay` | Connections that are delayed (with the)
+| `delay` | Dlayed connections (including the line number and the delay)
 | `description` | Full description of the plan - each connection on one line, in the format<br/>*line time (bus stop to get-in) -> time (bus stop to get-off)   (!!! delay if applicable)*
 
 ---
