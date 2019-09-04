@@ -117,7 +117,7 @@ class Connection(Entity):
                 raise ErrorGettingData('Response timeout')
             _LOGGER.debug( "url - %s",str(combination_response.url))
             if combination_response.status != 200:
-                raise ErrorGettingData(F"API returned response code {combination_response.status} ({await combination_response.text()})")
+                raise ErrorGettingData(f'API returned response code {combination_response.status} ({await combination_response.text()})')
             combination_decoded = await combination_response.json()
             if combination_decoded is None:
                 raise ErrorGettingData('Error passing the JSON response')
@@ -158,7 +158,7 @@ class Connection(Entity):
                     raise ErrorGettingData('Response timeout')
                 _LOGGER.debug( "(%s) url - %s",entity._name,str(connection_response.url))
                 if connection_response.status != 200:
-                    raise ErrorGettingData(F"API returned response code {connection_response.status} ({await connection_response.text()})")
+                    raise ErrorGettingData(f'API returned response code {connection_response.status} ({await connection_response.text()})')
                 connection_decoded = await connection_response.json()
                 if connection_decoded is None:
                     raise ErrorGettingData('Error passing the JSON response')
@@ -183,11 +183,11 @@ class Connection(Entity):
                     arrStation=trains["trainData"]["route"][1]["station"]["name"]
                     if first:
                         connections_short=line
-                        connections_long=line+" "+depTime+" ("+depStation+") -> "+arrTime+" ("+arrStation+")"
+                        connections_long=f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})'
                         first=False
                     else:
                         connections_short=connections_short+"-"+depStation.replace(" (PZ)","")+"-"+line
-                        connections_long=connections_long+"\n"+line+" "+depTime+" ("+depStation+") -> "+arrTime+" ("+arrStation+")"
+                        connections_long=connections_long+'\n'+f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})'
                 entity._state = entity._departure+" ("+connections_short+")"
                 entity._connections = connections_short
                 entity._description = connections_long
