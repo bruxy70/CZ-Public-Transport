@@ -15,7 +15,6 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "cz_pub_tran"
-DOMAIN = "cz_pub_tran"
 
 ICON_BUS = "mdi:bus"
 

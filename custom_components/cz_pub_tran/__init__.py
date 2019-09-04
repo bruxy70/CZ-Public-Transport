@@ -9,9 +9,9 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = 'cz_pub_tran'
+DOMAIN = 'sensor'
 SCAN_INTERVAL = 60
-
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 HTTP_TIMEOUT = 5
 
 async def async_setup(hass, base_config):
@@ -88,7 +88,7 @@ class Connection(Entity):
         self._connections = ""
         self._description = ""
         self._state = ""
-        self.entity_id=async_generate_entity_id('sensor.{}',name,Connection.entity_ids)
+        self.entity_id=async_generate_entity_id(ENTITY_ID_FORMAT,name,Connection.entity_ids)
         Connection.entity_ids.append(self.entity_id)
         _LOGGER.debug("Entity %s inicialized",self.entity_id)
         
