@@ -114,7 +114,7 @@ class Connection(Entity):
             with async_timeout.timeout(HTTP_TIMEOUT):            
                 combination_response = await Connection.session.get(url_combination,params=payload)
             if combination_response is None:
-                raise ErrorGettingData('No response')
+                raise ErrorGettingData('Response timeout')
             _LOGGER.debug( "url - %s",str(combination_response.url))
             if combination_response.status != 200:
                 raise ErrorGettingData(F"API returned response code {combination_response.status} ({await combination_response.text()})")
