@@ -23,7 +23,7 @@ HTTP_TIMEOUT = 5
 async def async_setup(hass, base_config):
     """Setup the sensor platform."""
     Connection.session = async_get_clientsession(hass)
-    async_call_later(hass,10, Connection.async_update_Connections())
+    async_call_later(hass,1, Connection.async_update_Connections())
     return True
 
 class CombinationID():
