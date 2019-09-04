@@ -29,7 +29,7 @@ ATTR_DURATION = "duration"
 ATTR_DEPARTURE = "departure"
 ATTR_CONNECTIONS = "connections"
 ATTR_DESCRIPTION = "description"
-ATTR_COMBINATION_GUID = "combination_guid"
+ATTR_DELAY = "delay"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
@@ -84,6 +84,7 @@ class CZPubTranSensor(Connection):
         res = {}
         res[ATTR_DEPARTURE] = self._departure
         res[ATTR_DURATION] = self._duration
+        res[ATTR_DELAY] = self._delay
         res[ATTR_CONNECTIONS] = self._connections
         res[ATTR_DESCRIPTION] = self._description
         return res

@@ -83,14 +83,18 @@ class Connection(Entity):
         self._combination_id = combination_id
         self._user_id = user_id
         self._lastupdated = None
+        self.load_defaults()
+        self.entity_id=async_generate_entity_id(ENTITY_ID_FORMAT,name,Connection.entity_ids)
+        Connection.entity_ids.append(self.entity_id)
+        _LOGGER.debug(f'Entity {self.entity_id} inicialized')
+    
+    def load_defaults(self):
+        self._state = ""
+        self._delay = ""
         self._duration = ""
         self._departure = ""
         self._connections = ""
         self._description = ""
-        self._state = ""
-        self.entity_id=async_generate_entity_id(ENTITY_ID_FORMAT,name,Connection.entity_ids)
-        Connection.entity_ids.append(self.entity_id)
-        _LOGGER.debug(f'Entity {self.entity_id} inicialized')
         
     async def async_added_to_hass(self):
         """I probably do not need this! To be removed! Call when entity is added to hass."""
@@ -167,9 +171,10 @@ class Connection(Entity):
                 _LOGGER.debug( f"({entity._name}) connection from {entity._origin} to {entity._destination}: found id {str(connection['id'])}")
                 entity._duration = connection["timeLength"]
                 entity._departure = connection["trains"][0]["trainData"]["route"][0]["depTime"]
-                connections_short=""
-                connections_long=""
-                first=True
+                connections_short=''
+                connections_long=''
+                delay=''
+                long_delim=''
                 for trains in connection["trains"]:
                     line=str(trains["trainData"]["info"]["num1"])
                     depTime=trains["trainData"]["route"][0]["depTime"]
@@ -179,28 +184,27 @@ class Connection(Entity):
                     else:
                         arrTime=trains["trainData"]["route"][1]["depTime"]
                     arrStation=trains["trainData"]["route"][1]["station"]["name"]
-                    if first:
+                    if long_delim=='':
                         connections_short=line
-                        connections_long=f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})'
-                        first=False
                     else:
                         connections_short=connections_short+"-"+depStation.replace(" (PZ)","")+"-"+line
-                        connections_long=connections_long+'\n'+f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})'
+                    if 'delay' in trains and trains['delay'] >0:
+                        connections_long=connections_long+long_delim+f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})   !!! {trains["delay"]}min delayed'
+                        if delay=='':
+                            delay = f'line {line} - {trains["delay"]}min delay'
+                        else:
+                            delay = delay + f' | line {line} - {trains["delay"]}min delay'
+                    else:
+                        connections_long=connections_long+long_delim+f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})'
+                    long_delim='\n'
                 entity._state = entity._departure+" ("+connections_short+")"
                 entity._connections = connections_short
                 entity._description = connections_long
+                entity._delay = delay
             except ErrorGettingData as e:
                 _LOGGER.error( f'({entity._name}) Error getting connection: {e.value}')
-                entity._state = ""
-                entity._duration = ""
-                entity._departure = ""
-                entity._connections = ""
-                entity._description = ""
+                entity.load_defaults()
             except:
                 _LOGGER.error( f'({entity._name}) Exception getting connection data')
-                entity._state = ""
-                entity._duration = ""
-                entity._departure = ""
-                entity._connections = ""
-                entity._description = ""
+                entity.load_defaults()
         async_call_later(Connection.hass, SCAN_INTERVAL, Connection.async_update_Connections())
