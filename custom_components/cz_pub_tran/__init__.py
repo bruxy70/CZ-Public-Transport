@@ -38,11 +38,11 @@ class CombinationID():
             return False
 
     @staticmethod
-    def guid(combination_id):
+    def get_guid(combination_id):
         if combination_id in CombinationID.combination_ids:
             return CombinationID.combination_ids[combination_id].guid
         else:
-            _LOGGER.error("GUID for combination ID %s not found!",combination_id)
+            _LOGGER.error(f'GUID for combination ID {combination_id} not found!')
             return ''
 
     @staticmethod
@@ -83,19 +83,23 @@ class Connection(Entity):
         self._combination_id = combination_id
         self._user_id = user_id
         self._lastupdated = None
+        self.load_defaults()
+        self.entity_id=async_generate_entity_id(ENTITY_ID_FORMAT,name,Connection.entity_ids)
+        Connection.entity_ids.append(self.entity_id)
+        _LOGGER.debug(f'Entity {self.entity_id} inicialized')
+    
+    def load_defaults(self):
+        self._state = ""
+        self._delay = ""
         self._duration = ""
         self._departure = ""
         self._connections = ""
         self._description = ""
-        self._state = ""
-        self.entity_id=async_generate_entity_id(ENTITY_ID_FORMAT,name,Connection.entity_ids)
-        Connection.entity_ids.append(self.entity_id)
-        _LOGGER.debug("Entity %s inicialized",self.entity_id)
         
     async def async_added_to_hass(self):
         """I probably do not need this! To be removed! Call when entity is added to hass."""
         Connection.connections.append(self)
-        _LOGGER.debug( "Entity %s added",self.entity_id)
+        _LOGGER.debug(f'Entity {self.entity_id} added')
 
 
     @staticmethod
@@ -103,19 +107,17 @@ class Connection(Entity):
         if CombinationID.guid_exist(combination_id):
             return True
         url_combination  = 'https://ext.crws.cz/api/'
-        _LOGGER.debug( "Updating CombinationInfo guid %s",combination_id)
+        _LOGGER.debug( f'Updating CombinationInfo guid {combination_id}')
         if user_id=="":
             payload = {}
         else:
             payload= {'userId':user_id}
-        combination_guid = None
-        guid_valid_to = None
         try:
             with async_timeout.timeout(HTTP_TIMEOUT):            
                 combination_response = await Connection.session.get(url_combination,params=payload)
             if combination_response is None:
                 raise ErrorGettingData('Response timeout')
-            _LOGGER.debug( "url - %s",str(combination_response.url))
+            _LOGGER.debug( f'url - {combination_response.url}')
             if combination_response.status != 200:
                 raise ErrorGettingData(f'API returned response code {combination_response.status} ({await combination_response.text()})')
             combination_decoded = await combination_response.json()
@@ -127,12 +129,12 @@ class Connection(Entity):
                 if combination["id"] == combination_id:
                     CombinationID.clean_combination_ids(combination_id)
                     CombinationID.combination_ids[combination["id"]]=(CombinationID(combination["guid"],datetime.strptime(combination["ttValidTo"], "%d.%m.%Y").date()))
-                    _LOGGER.debug( "found guid %s valid till %s",combination["guid"],datetime.strptime(combination["ttValidTo"], "%d.%m.%Y").date())
+                    _LOGGER.debug( f"found guid {combination['guid']} valid till {datetime.strptime(combination['ttValidTo'], '%d.%m.%Y').date()}")
                     return True
         except ErrorGettingData as e:
-            _LOGGER.error( "Error getting CombinatonInfo: %s",e.value)
+            _LOGGER.error( f'Error getting CombinatonInfo: {e.value}')
         except:
-            _LOGGER.error( "Exception reading guid data")
+            _LOGGER.error( 'Exception reading guid data')
         return False
 
     @staticmethod
@@ -142,36 +144,37 @@ class Connection(Entity):
                 if not await Connection.async_update_CombinationInfo(entity._combination_id,entity._user_id):
                     continue
             if entity.scheduled_connection():
-                _LOGGER.debug( "(%s) departure already secheduled for %s - not checking connections", entity._name, entity._departure)
+                _LOGGER.debug( f'({entity._name}) departure already scheduled for {entity._departure} - not checking connections')
                 continue
-            url_connection = "https://ext.crws.cz/api/"+CombinationID.guid(entity._combination_id)+"/connections"
+            url_connection = f'https://ext.crws.cz/api/{CombinationID.get_guid(entity._combination_id)}/connections'
             if entity._user_id=="":
                 payload= {'from':entity._origin, 'to':entity._destination}
             else:
                 payload= {'from':entity._origin, 'to':entity._destination,'userId':entity._user_id}
-            _LOGGER.debug( "(%s) Checking connection from %s to %s", entity._name,entity._origin,entity._destination)            
+            _LOGGER.debug( f'({entity._name}) Checking connection from {entity._origin} to {entity._destination}')            
             try:
                 with async_timeout.timeout(HTTP_TIMEOUT):            
                     connection_response = await Connection.session.get(url_connection,params=payload)
 
                 if connection_response is None:
                     raise ErrorGettingData('Response timeout')
-                _LOGGER.debug( "(%s) url - %s",entity._name,str(connection_response.url))
+                _LOGGER.debug( f'({entity._name}) url - {str(connection_response.url)}')
                 if connection_response.status != 200:
                     raise ErrorGettingData(f'API returned response code {connection_response.status} ({await connection_response.text()})')
                 connection_decoded = await connection_response.json()
                 if connection_decoded is None:
                     raise ErrorGettingData('Error passing the JSON response')
                 if "handle" not in connection_decoded:
-                    raise ErrorGettingData('Did not find any connection from '+entity._origin+" to "+entity._destination)
+                    raise ErrorGettingData(f'Did not find any connection from {entity._origin} to {entity._destination}')
 
                 connection = connection_decoded["connInfo"]["connections"][0]
-                _LOGGER.debug( "(%s) connection from %s to %s: found id %s",entity._name,entity._origin,entity._destination,str(connection["id"]))
+                _LOGGER.debug( f"({entity._name}) connection from {entity._origin} to {entity._destination}: found id {str(connection['id'])}")
                 entity._duration = connection["timeLength"]
                 entity._departure = connection["trains"][0]["trainData"]["route"][0]["depTime"]
-                connections_short=""
-                connections_long=""
-                first=True
+                connections_short=''
+                connections_long=''
+                delay=''
+                long_delim=''
                 for trains in connection["trains"]:
                     line=str(trains["trainData"]["info"]["num1"])
                     depTime=trains["trainData"]["route"][0]["depTime"]
@@ -181,28 +184,27 @@ class Connection(Entity):
                     else:
                         arrTime=trains["trainData"]["route"][1]["depTime"]
                     arrStation=trains["trainData"]["route"][1]["station"]["name"]
-                    if first:
+                    if long_delim=='':
                         connections_short=line
-                        connections_long=f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})'
-                        first=False
                     else:
                         connections_short=connections_short+"-"+depStation.replace(" (PZ)","")+"-"+line
-                        connections_long=connections_long+'\n'+f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})'
+                    if 'delay' in trains and trains['delay'] >0:
+                        connections_long=connections_long+long_delim+f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})   !!! {trains["delay"]}min delayed'
+                        if delay=='':
+                            delay = f'line {line} - {trains["delay"]}min delay'
+                        else:
+                            delay = delay + f' | line {line} - {trains["delay"]}min delay'
+                    else:
+                        connections_long=connections_long+long_delim+f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})'
+                    long_delim='\n'
                 entity._state = entity._departure+" ("+connections_short+")"
                 entity._connections = connections_short
                 entity._description = connections_long
+                entity._delay = delay
             except ErrorGettingData as e:
-                _LOGGER.error( "(%s) Error getting connection: %s",entity._name,e.value)
-                entity._state = ""
-                entity._duration = ""
-                entity._departure = ""
-                entity._connections = ""
-                entity._description = ""
+                _LOGGER.error( f'({entity._name}) Error getting connection: {e.value}')
+                entity.load_defaults()
             except:
-                _LOGGER.error( "(%s) Exception getting connection data",entity._name)
-                entity._state = ""
-                entity._duration = ""
-                entity._departure = ""
-                entity._connections = ""
-                entity._description = ""
+                _LOGGER.error( f'({entity._name}) Exception getting connection data')
+                entity.load_defaults()
         async_call_later(Connection.hass, SCAN_INTERVAL, Connection.async_update_Connections())
