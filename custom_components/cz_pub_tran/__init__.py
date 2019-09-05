@@ -34,14 +34,19 @@ class CombinationID():
     
     @staticmethod
     def guid_exist(combination_id):
-        if combination_id in CombinationID.combination_ids:
-            today=datetime.now().date()
-            if CombinationID.combination_ids[combination_id].validTo >= today:
-                return True
+        """Return False if Combination ID needs to be updated."""
+        try:
+            if combination_id in CombinationID.combination_ids:
+                today=datetime.now().date()
+                if CombinationID.combination_ids[combination_id].validTo >= today:
+                    return True
+                else:
+                    return False
             else:
                 return False
-        else:
-            return False
+        except:
+            return False # Refresh data on Error
+
 
     @staticmethod
     def get_guid(combination_id):
@@ -70,17 +75,22 @@ class Connection(Entity):
     hass = None
 
     def scheduled_connection(self):
-        if self._departure == "" or self.forced_refresh_countdown <= 0:
-            self.forced_refresh_countdown = FORCED_REFRESH_COUNT
-            return False
-        departure_time=datetime.strptime(self._departure,"%H:%M").time()
-        now=datetime.now().time()
-        if now < departure_time or ( now.hour> 22 and departure_time < 6 ):
-            self.forced_refresh_countdown = self.forced_refresh_countdown - 1
-            return True
-        else:
-            self.forced_refresh_countdown = FORCED_REFRESH_COUNT
-            return False
+        """Return False if Connection needs to be updated."""
+        try:
+            if self._departure == "" or self.forced_refresh_countdown <= 0:
+                self.forced_refresh_countdown = FORCED_REFRESH_COUNT
+                return False
+            departure_time=datetime.strptime(self._departure,"%H:%M").time()
+            now=datetime.now().time()
+            if now < departure_time or ( now.hour> 22 and departure_time < 6 ):
+                self.forced_refresh_countdown = self.forced_refresh_countdown - 1
+                return True
+            else:
+                self.forced_refresh_countdown = FORCED_REFRESH_COUNT
+                return False
+        except:
+            return False # Refresh data on Error
+
 
     def __init__(self,hass,session, name, origin, destination,combination_id,user_id):
         """Initialize the device."""
