@@ -32,10 +32,20 @@ The `CZ-Public-Transport` component is a Home Assistant custom sensor that finds
 ## Configuration
 Add `cz_pub_tran` sensor in your `configuration.yaml` as per the example below:
 ```yaml
-# Example configuration.yaml entry
+# Example configuration.yaml simple
+cz_pub_tran:
+  sensors:
+    - origin: "Zbraslavské náměstí"
+      destination: "Poliklinika Barrandov"
+    - origin: "Cernosice, zel.zast."
+      destination: "Florenc"
+
+# Example configuration.yaml complex
 cz_pub_tran:
   user_id: <no idea where to get one>
   scan_interval: 120
+  force_refresh_interval: 5
+  detail_format: HTML
   sensors:
     - name: "Zbraslav-Barrandov"
       origin: "Zbraslavské náměstí"
@@ -43,6 +53,7 @@ cz_pub_tran:
     - name: "Černošice-Florenc"
       origin: "Cernosice, zel.zast."
       destination: "Florenc"
+
 ```
 
 ### CONFIGURATION PARAMETERS
@@ -51,6 +62,8 @@ cz_pub_tran:
 | `cz_pub_tran` | No | This is the platform name
 | `user_id` | Yes | ...if you have one (if you do, please let me know where you got it. Thanks!). Otherwise it will use the trial account. 
 | `scan_interval` | Yes | The sensor refresh rate (seconds)<br/>**Default**: 60
+| `force_refresh_interval` | Yes | The sensor will skip update if there is already scheduled connection. But, Every n-th refresh, it will force the update, to check chanegs in the delay. This can be disabled by setting this to 0.<br/>**Default**: 5  **Range**: 0-60
+| `detail_format` | Yes | The **detail** attribute can be rendered in 3 different formats:<br/>- **text**: plain text, each connection on 1 line (**default**)<br/>- **HTML**: HTML table<br/>- **list**: list of lidividual lines - you have to use script to render results in whatever format you need
 | `name` | Yes | Sensor friendly name.<br/>**Default**: cz_pub_tran
 | `origin` | No | Name of the originating bus stop
 | `destination` | No | Name of the destination bus stop
