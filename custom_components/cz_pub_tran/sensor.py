@@ -1,5 +1,4 @@
 """Support for cz_pub_tran sensors."""
-from . import Connection
 import logging, json, requests
 from datetime import datetime, date, time, timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -7,9 +6,13 @@ from homeassistant.const import (
     CONF_NAME
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'cz_pub_tran'
+COMPONENT_NAME = 'sensor'
+ENTITY_ID_FORMAT = COMPONENT_NAME + ".{}"
 
 ICON_BUS = "mdi:bus"
 
@@ -38,7 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class CZPubTranSensor(Entity):
     """Representation of a openroute service travel time sensor."""
-    def __init__(self, hass, session, name, origin, destination,combination_id):
+    def __init__(self, hass, name, origin, destination,combination_id):
         """Initialize the sensor."""
         self._name = name
         self._origin = origin
@@ -79,16 +82,16 @@ class CZPubTranSensor(Entity):
     def scheduled_connection(self):
         """Return False if Connection needs to be updated."""
         try:
-            if self.forced_refresh_countdown <= 0 or self._departure == "":
-                self.forced_refresh_countdown = FORCED_REFRESH_COUNT
+            if self._forced_refresh_countdown <= 0 or self._departure == "":
+                self._forced_refresh_countdown = FORCED_REFRESH_COUNT
                 return False
             departure_time=datetime.strptime(self._departure,"%H:%M").time()
             now=datetime.now().time()
             if now < departure_time or ( now.hour> 22 and departure_time < 6 ):
-                self.forced_refresh_countdown = self.forced_refresh_countdown - 1
+                self._forced_refresh_countdown = self._forced_refresh_countdown - 1
                 return True
             else:
-                self.forced_refresh_countdown = FORCED_REFRESH_COUNT
+                self._forced_refresh_countdown = FORCED_REFRESH_COUNT
                 return False
         except:
             return False # Refresh data on Error
@@ -97,7 +100,7 @@ class CZPubTranSensor(Entity):
         self._departure = departure
         self._duration = duration
         self._state = state
-        self._connections = connectiobs
+        self._connections = connections
         self._description = description
         self._delay = delay
 
@@ -106,5 +109,5 @@ class CZPubTranSensor(Entity):
         
     async def async_added_to_hass(self):
         """I probably do not need this! To be removed! Call when entity is added to hass."""
-        hass.data[DOMAIN].add_sensor(self)
+        self.hass.data[DOMAIN].add_sensor(self)
         _LOGGER.debug(f'Entity {self.entity_id} added')
