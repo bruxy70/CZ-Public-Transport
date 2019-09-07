@@ -24,6 +24,7 @@ ICON_BUS = "mdi:bus"
 
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
+CONF_USERID = "userId"
 CONF_COMBINATION_ID = "combination_id"
 
 ATTR_DURATION = "duration"
@@ -43,8 +44,7 @@ HTTP_TIMEOUT = 5
 
 SENSOR_SCHEMA = vol.Schema(
     {
-        # vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Optional(CONF_COMBINATION_ID, default=DEFAULT_COMBINATION_ID): cv.string,
@@ -68,14 +68,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Setup the sensor platform."""
     if discovery_info is None:
         return
-    origin = config(CONF_ORIGIN)
-    destination = config[CONF_DESTINATION]
-    name = config.get(CONF_NAME)
-    combination_id = config.get(CONF_COMBINATION_ID)
     devs = []
     for sensor in discovery_info:
         devs.append([CZPubTranSensor(hass, sensor)])
-    await async_add_entities(devs,True)
+    async_add_entities(devs,True)
 
 class CZPubTranSensor(Entity):
     """Representation of a openroute service travel time sensor."""
@@ -88,7 +84,7 @@ class CZPubTranSensor(Entity):
         self._lastupdated = None
         self._forced_refresh_countdown = 0
         self.load_defaults()
-        self.entity_id=async_generate_entity_id(ENTITY_ID_FORMAT,name,hass.data[DOMAIN].entity_ids())
+        self.entity_id=async_generate_entity_id(ENTITY_ID_FORMAT,self._name,hass.data[DOMAIN].entity_ids())
         hass.data[DOMAIN].add_entity_id(self.entity_id)
         _LOGGER.debug(f'Entity {self.entity_id} inicialized')
 

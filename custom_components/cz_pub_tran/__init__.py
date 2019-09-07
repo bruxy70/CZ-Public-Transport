@@ -10,7 +10,6 @@ from datetime import datetime, date, time, timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_NAME
 )
@@ -21,6 +20,7 @@ from homeassistant.helpers.event import async_call_later
 from .sensor import (
     DOMAIN,
     CONF_USERID,
+    DEFAULT_SCAN_INTERVAL,
     COMPONENT_NAME
 )
 
@@ -31,7 +31,7 @@ async def async_setup(hass, config):
     conf = config.get(DOMAIN)
     user_id = config.get(CONF_USERID)
     if config.get(CONF_SCAN_INTERVAL) is None:
-        DEFAULT_SCAN_INTERVAL.total_seconds()
+        scan_interval = DEFAULT_SCAN_INTERVAL.total_seconds()
     else:
         scan_interval = config.get(CONF_SCAN_INTERVAL).total_seconds()
     session = async_get_clientsession(hass)
@@ -55,7 +55,7 @@ class ConnectionPlatform(Entity):
     def entity_ids(self):
         return self._entity_ids
 
-    def add_entity_if(self,id):
+    def add_entity_id(self,id):
         self._entity_ids.append(id)
 
     async def async_update_Connections(self):
