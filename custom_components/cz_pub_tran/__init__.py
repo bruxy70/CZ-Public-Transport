@@ -31,11 +31,7 @@ async def async_setup(hass, config):
     """Setup the cz_pub_tran platform."""
     conf = CONFIG_SCHEMA(config).get(DOMAIN)
     user_id = conf.get(CONF_USERID)
-    _LOGGER.debug( f'Scan Interval {conf.get(CONF_SCAN_INTERVAL)}')
-    if conf.get(CONF_SCAN_INTERVAL) is None:
-        scan_interval = DEFAULT_SCAN_INTERVAL.total_seconds()
-    else:
-        scan_interval = conf.get(CONF_SCAN_INTERVAL).total_seconds()
+    scan_interval = conf.get(CONF_SCAN_INTERVAL).total_seconds()
     session = async_get_clientsession(hass)
     hass.data[DOMAIN]= ConnectionPlatform(hass,user_id,scan_interval,session)
     hass.helpers.discovery.load_platform(COMPONENT_NAME,DOMAIN, conf[CONF_SENSORS], config)
