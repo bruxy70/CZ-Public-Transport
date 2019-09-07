@@ -62,7 +62,7 @@ cz_pub_tran:
 | `cz_pub_tran` | No | This is the platform name
 | `user_id` | Yes | ...if you have one (if you do, please let me know where you got it. Thanks!). Otherwise it will use the trial account. 
 | `scan_interval` | Yes | The sensor refresh rate (seconds)<br/>**Default**: 60
-| `force_refresh_interval` | Yes | The sensor will skip update if there is already scheduled connection. But, Every n-th refresh, it will force the update, to check chanegs in the delay. This can be disabled by setting this to 0.<br/>**Default**: 5  **Range**: 0-60
+| `force_refresh_interval` | Yes | The sensor will skip update if there is already scheduled connection. But, every n-th refresh, it will force the update, to check chanegs in the delay. This can be disabled by setting this to 0.<br/>**Default**: 5  **Range**: 0-60
 | `detail_format` | Yes | The **detail** attribute can be rendered in 3 different formats:<br/>- **text**: plain text, each connection on 1 line (**default**)<br/>- **HTML**: HTML table<br/>- **list**: list of lidividual lines - you have to use script to render results in whatever format you need
 | `name` | Yes | Sensor friendly name.<br/>**Default**: cz_pub_tran
 | `origin` | No | Name of the originating bus stop
