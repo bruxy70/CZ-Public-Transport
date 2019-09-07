@@ -8,25 +8,30 @@ The `CZ-Public-Transport` component is a Home Assistant custom sensor that finds
 Add `cz_pub_tran` sensor in your `configuration.yaml` as per the example below:
 ```yaml
 # Example configuration.yaml entry
-sensor:
-  - platform: cz_pub_tran
-    name: cernosice_florenc
-    origin: "Cernosice, zel.zast."
-    destination: "Florenc"
+cz_pub_tran:
+  user_id: <no idea where to get one>
+  scan_interval: 120
+  sensors:
+    - name: "Zbraslav-Barrandov"
+      origin: "Zbraslavské náměstí"
+      destination: "Poliklinika Barrandov"
+    - name: "Černošice-Florenc"
+      origin: "Cernosice, zel.zast."
+      destination: "Florenc"
 ```
 
 ### CONFIGURATION PARAMETERS
 | Attribute | Optional | Description
 |:---------|-----------|-----------
-| `platform` | No | `cz_pub_tran`
+| `cz_pub_tran` | No | This is the platform name
+| `user_id` | Yes | ...if you have one (if you do, please let me know where you got it. Thanks!). Otherwise it will use the trial account. 
+| `scan_interval` | Yes | The sensor refresh rate (seconds)<br/>**Default**: 60
 | `name` | Yes | Sensor friendly name.<br/>**Default**: cz_pub_tran
 | `origin` | No | Name of the originating bus stop
 | `destination` | No | Name of the destination bus stop
-| `combination_id` | Yes | Name of the combination of connections.<br/>**Default**: `ABCz`
-| `user_id` | Yes | ...if you have one (if you do, please let me know where you got it. Thanks!). Otherwise it will use the trial account. 
+| `combination_id` | Yes | Name of the combination of timetables.<br/>**Default**: `ABCz`
 
 ## STATE AND ATTRIBUTES
-
 ### State
 The next connection short description in format *time (bus line)*. If there are line changes to be made, the status will only show the first connection (see attribute description for the complete plan)
 
@@ -34,6 +39,7 @@ The next connection short description in format *time (bus line)*. If there are 
 | Attribute | Description
 |:---------|-----------
 | `departure` | Departure time
+| `line` | Bus line (1st one if there are more connections - for more look in the description)
 | `connections` | List of the connections to take (or simply line number if this is a direct connection)
 | `duration` | Trip duration
 | `delay` | Dlayed connections (including the line number and the delay)

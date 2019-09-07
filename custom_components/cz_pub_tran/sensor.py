@@ -70,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
     devs = []
     for sensor in discovery_info:
-        devs.append([CZPubTranSensor(hass, sensor)])
+        devs.append(CZPubTranSensor(hass, SENSOR_SCHEMA(sensor)))
     async_add_entities(devs,True)
 
 class CZPubTranSensor(Entity):
@@ -86,7 +86,7 @@ class CZPubTranSensor(Entity):
         self.load_defaults()
         self.entity_id=async_generate_entity_id(ENTITY_ID_FORMAT,self._name,hass.data[DOMAIN].entity_ids())
         hass.data[DOMAIN].add_entity_id(self.entity_id)
-        _LOGGER.debug(f'Entity {self.entity_id} inicialized')
+        _LOGGER.debug(f'Entity {self._name} inicialized')
 
     @property
     def name(self):
