@@ -21,7 +21,6 @@ from homeassistant.const import (
 )
 import voluptuous as vol
 from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 import logging, json, requests
 from datetime import datetime, date, time, timedelta
 import asyncio
