@@ -38,28 +38,39 @@ DEFAULT_NAME = "cz_pub_tran"
 FORCED_REFRESH_COUNT = 5
 HTTP_TIMEOUT = 5
 
-SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_ORIGIN): cv.string,
-    vol.Required(CONF_DESTINATION): cv.string,
-    vol.Optional(CONF_COMBINATION_ID, default=DEFAULT_COMBINATION_ID): cv.string,
-})
+SENSOR_SCHEMA = vol.Schema(
+    {
+        # vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_ORIGIN): cv.string,
+        vol.Required(CONF_DESTINATION): cv.string,
+        vol.Optional(CONF_COMBINATION_ID, default=DEFAULT_COMBINATION_ID): cv.string,
+    }
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_USERID,default=""): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-    })
-})
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_USERID,default=""): cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
+                vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA])
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 async def async_setup(hass, config):
     """Setup the sensor platform."""
-    user_id = config.get(CONF_USERID)
-    scan_interval = config.get(CONF_SCAN_INTERVAL).total_seconds()
+    conf = config.get[DOMAIN]
+    if conf is None:
+        conf = {}
+    user_id = conf[CONF_USERID]
+    scan_interval = conf[CONF_SCAN_INTERVAL].total_seconds()
     session = async_get_clientsession(hass)
     hass.data[DOMAIN]= ConnectionPlatform(user_id,scan_interval,session)
-    discovery.load_platform(hass, COMPONENT_NAME, DOMAIN, config[DOMAIN][CONF_SENSORS], config)
+    discovery.load_platform(hass, COMPONENT_NAME, DOMAIN, conf[CONF_SENSORS], config)
     async_call_later(hass,1, hass.data[DOMAIN].async_update_Connections())
     return True
 
