@@ -4,12 +4,13 @@ If the connection is scheduled, it skips the update.
 But every 5 minutes it updates all connections regardless - to check on delay
 """
 from czpubtran.api import czpubtran
-import logging, json, requests
+import logging
 from homeassistant.helpers import config_validation as cv, discovery
 from datetime import datetime, date, time, timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_NAME
 )
@@ -28,11 +29,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     """Setup the cz_pub_tran platform."""
     conf = config.get(DOMAIN)
-    user_id = conf[CONF_USERID]
-    scan_interval = conf[CONF_SCAN_INTERVAL].total_seconds()
+    user_id = config.get(CONF_USERID)
+    if config.get(CONF_SCAN_INTERVAL) is None:
+        DEFAULT_SCAN_INTERVAL.total_seconds()
+    else:
+        scan_interval = config.get(CONF_SCAN_INTERVAL).total_seconds()
     session = async_get_clientsession(hass)
     hass.data[DOMAIN]= ConnectionPlatform(user_id,scan_interval,session)
-    discovery.load_platform(hass, COMPONENT_NAME, DOMAIN, conf[CONF_SENSORS], config)
+    hass.helpers.discovery.load_platform(COMPONENT_NAME,DOMAIN, conf[CONF_SENSORS], config)
+    # discovery.load_platform(hass, COMPONENT_NAME, DOMAIN, conf[CONF_SENSORS], config)
     async_call_later(hass,1, hass.data[DOMAIN].async_update_Connections())
     return True
 

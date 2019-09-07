@@ -1,5 +1,6 @@
 """Support for cz_pub_tran sensors."""
 import voluptuous as vol
+import logging
 from homeassistant.helpers import config_validation as cv, discovery
 from datetime import datetime, date, time, timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -23,7 +24,6 @@ ICON_BUS = "mdi:bus"
 
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
-CONF_USERID = "userId"
 CONF_COMBINATION_ID = "combination_id"
 
 ATTR_DURATION = "duration"
@@ -66,21 +66,25 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Setup the sensor platform."""
+    if discovery_info is None:
+        return
     origin = config(CONF_ORIGIN)
     destination = config[CONF_DESTINATION]
     name = config.get(CONF_NAME)
     combination_id = config.get(CONF_COMBINATION_ID)
-    async_add_entities([CZPubTranSensor(hass, name, origin, destination,combination_id)],True)
-
+    devs = []
+    for sensor in discovery_info:
+        devs.append([CZPubTranSensor(hass, sensor)])
+    await async_add_entities(devs,True)
 
 class CZPubTranSensor(Entity):
     """Representation of a openroute service travel time sensor."""
-    def __init__(self, hass, name, origin, destination,combination_id):
+    def __init__(self, hass, config):
         """Initialize the sensor."""
-        self._name = name
-        self._origin = origin
-        self._destination = destination
-        self._combination_id = combination_id
+        self._name = config.get(CONF_NAME)
+        self._origin = config.get(CONF_ORIGIN)
+        self._destination = config.get(CONF_DESTINATION)
+        self._combination_id = config.get(CONF_COMBINATION_ID)
         self._lastupdated = None
         self._forced_refresh_countdown = 0
         self.load_defaults()
