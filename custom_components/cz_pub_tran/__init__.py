@@ -67,7 +67,7 @@ class ConnectionPlatform():
                 continue
             await self._api.async_find_connection(entity._origin,entity._destination,entity._combination_id)
             duration = self._api.duration
-            departure = self._api.duration
+            departure = self._api.departure
             connections_short=''
             connections_long=''
             delay=''
