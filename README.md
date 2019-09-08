@@ -32,7 +32,7 @@ The `CZ-Public-Transport` component is a Home Assistant custom sensor that finds
 ## Configuration
 Add `cz_pub_tran` sensor in your `configuration.yaml` as per the example below:
 ```yaml
-# Example configuration.yaml simple
+# Simple example of configuration.yaml (sensors will be named automatically)
 cz_pub_tran:
   sensors:
     - origin: "Zbraslavské náměstí"
@@ -40,7 +40,7 @@ cz_pub_tran:
     - origin: "Cernosice, zel.zast."
       destination: "Florenc"
 
-# Example configuration.yaml complex
+# Complex example of configuration.yaml
 cz_pub_tran:
   user_id: <no idea where to get one>
   scan_interval: 120
@@ -62,8 +62,8 @@ cz_pub_tran:
 | `cz_pub_tran` | No | This is the platform name
 | `user_id` | Yes | ...if you have one (if you do, please let me know where you got it. Thanks!). Otherwise it will use the trial account. 
 | `scan_interval` | Yes | The sensor refresh rate (seconds)<br/>**Default**: 60
-| `force_refresh_interval` | Yes | The sensor will skip update if there is already scheduled connection. But, every n-th refresh, it will force the update, to check delay changes. This can be disabled by setting this to 0.<br/>**Default**: 5  **Range**: 0-60
-| `detail_format` | Yes | The **detail** attribute can be rendered in 3 different formats:<br/>- **text**: plain text, each connection on 1 line (**default**)<br/>- **HTML**: HTML table<br/>- **list**: list of lidividual lines - you have to use script to render results in whatever format you need
+| `force_refresh_period` | Yes | The sensor will skip update if there is already scheduled connection. But, every n-th refresh, it will force the update, to check delay changes. This can be disabled by setting this to 0.<br/>**Default**: 5  **Range**: 0-60
+| `description_format` | Yes | The **description** attribute can be rendered in 3 different formats:<br/>- **text**: plain text, each connection on 1 line (**default**)<br/>- **HTML**: HTML table<br/>- **list**: list of lidividual lines - see [bellow for example use](#Advanced---parsing-list-description)
 | `name` | Yes | Sensor friendly name.<br/>**Default**: cz_pub_tran
 | `origin` | No | Name of the originating bus stop
 | `destination` | No | Name of the destination bus stop
@@ -81,7 +81,42 @@ The next connection short description in format *time (bus line)*. If there are 
 | `connections` | List of the connections to take (or simply line number if this is a direct connection)
 | `duration` | Trip duration
 | `delay` | Dlayed connections (including the line number and the delay)
-| `description` | Full description of the plan - each connection on one line, in the format<br/>*line time (bus stop to get-in) -> time (bus stop to get-off)   (!!! delay if applicable)*
+| `description` | Full description of the connections - each connection on 1 line, in the format<br/>*line time (bus stop to get-in) -> time (bus stop to get-off)   (!!! delay if applicable)*<br/>Or a list of connection if **description_format** parameter is set to **list**
+
+### Advanced - parsing list description
+If you have configured the **description_format** as list, you can access the attributes of the individual connections.
+#### You can display them like that this example
+```yaml
+{{ states.sensor.cz_pub_tran.attributes["description"] }}
+```
+
+#### Result:
+```
+[{'line': '129', 'depTime': '14:06', 'depStation': 'Zbraslavské náměstí', 'arrTime': '14:16', 'arrStation': 'Lihovar', 'delay': ''}, {'line': '20', 'depTime': '14:25', 'depStation': 'Lihovar', 'arrTime': '14:35', 'arrStation': 'Poliklinika Barrandov', 'delay': ''}]
+```
+
+#### Or you can parse them using scipt:
+```yaml
+{% for bus in states.sensor.cz_pub_tran.attributes["description"] %}
+  Line: {{ bus["line"] }}
+  Departure time {{ bus["depTime"] }} from {{ bus["depStation"] }}
+  Arrival time {{ bus["arrTime"] }} to {{ bus["arrStation"] }}
+  {%- if bus["delay"] != "" %}
+    Current delay {{ bus["delay"] }} min
+  {% endif %}
+{% endfor %}
+```
+
+#### Result
+```
+  Line: 129
+  Departure time 14:06 from Zbraslavské náměstí
+  Arrival time 14:16 to Lihovar
+
+  Line: 20
+  Departure time 14:25 from Lihovar
+  Arrival time 14:35 to Poliklinika Barrandov
+```
 
 ---
 <a href="https://www.buymeacoffee.com/3nXx0bJDP" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/white_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>

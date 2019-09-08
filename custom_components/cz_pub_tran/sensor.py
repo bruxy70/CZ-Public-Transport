@@ -22,14 +22,14 @@ ENTITY_ID_FORMAT = COMPONENT_NAME + ".{}"
 
 ICON_BUS = "mdi:bus"
 
-DETAIL_FORMAT_OPTIONS = ['HTML','text','list']
+DESCRIPTION_FORMAT_OPTIONS = ['HTML','text','list']
 
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
 CONF_USERID = "userId"
 CONF_COMBINATION_ID = "combination_id"
-CONF_FORCE_REFRESH_INTERVAL = "force_refresh_interval"
-CONF_DETAIL_FORMAT = "detail_format"
+CONF_FORCE_REFRESH_PERIOD = "force_refresh_period"
+CONF_DESCRIPTION_FORMAT = "description_format"
 
 ATTR_DURATION = "duration"
 ATTR_DEPARTURE = "departure"
@@ -40,8 +40,8 @@ ATTR_DELAY = "delay"
 TRACKABLE_DOMAINS = ["sensor"]
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
-DEFAULT_FORCE_REFRESH_INTERVAL = 5
-DEFAULT_DETAIL_FORMAT = 'text'
+DEFAULT_FORCE_REFRESH_PERIOD = 5
+DEFAULT_DESCRIPTION_FORMAT = 'text'
 DEFAULT_COMBINATION_ID = "ABCz"
 DEFAULT_NAME = "cz_pub_tran"
 
@@ -62,8 +62,8 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_USERID,default=""): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-                vol.Optional(CONF_DETAIL_FORMAT, default=DEFAULT_DETAIL_FORMAT): vol.In(DETAIL_FORMAT_OPTIONS),
-                vol.Optional(CONF_FORCE_REFRESH_INTERVAL, default=DEFAULT_FORCE_REFRESH_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=0, max=60)),
+                vol.Optional(CONF_DESCRIPTION_FORMAT, default=DEFAULT_DESCRIPTION_FORMAT): vol.In(DESCRIPTION_FORMAT_OPTIONS),
+                vol.Optional(CONF_FORCE_REFRESH_PERIOD, default=DEFAULT_FORCE_REFRESH_PERIOD): vol.All(vol.Coerce(int), vol.Range(min=0, max=60)),
                 vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA])
             }
         )
@@ -119,18 +119,18 @@ class CZPubTranSensor(Entity):
     def icon(self):
         return ICON_BUS
 
-    def scheduled_connection(self,forced_refresh_interval):
+    def scheduled_connection(self,forced_refresh_period):
         """Return False if Connection needs to be updated."""
         try:
             if self._forced_refresh_countdown <= 0 or self._departure == '':
                 return False
-            if forced_refresh_interval == 0:
+            if forced_refresh_period == 0:
                 departure_time=datetime.strptime(self._departure,"%H:%M").time()
                 now=datetime.now().time()
                 return bool(now < departure_time or ( now.hour> 22 and departure_time < 6 ))
             else:
                 if self._forced_refresh_countdown <= 0 or self._departure == '':
-                    self._forced_refresh_countdown = forced_refresh_interval
+                    self._forced_refresh_countdown = forced_refresh_period
                     return False
                 departure_time=datetime.strptime(self._departure,"%H:%M").time()
                 now=datetime.now().time()
@@ -138,7 +138,7 @@ class CZPubTranSensor(Entity):
                     self._forced_refresh_countdown = self._forced_refresh_countdown - 1
                     return True
                 else:
-                    self._forced_refresh_countdown = forced_refresh_interval
+                    self._forced_refresh_countdown = forced_refresh_period
                     return False
         except:
             return False # Refresh data on Error

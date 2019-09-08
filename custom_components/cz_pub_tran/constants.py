@@ -2,7 +2,7 @@
 Text constants for cz_pub_tran sensor
 """
 
-CONNECTION_DETAIL_HEADER = {
+DESCRIPTION_HEADER = {
     'text': '',
     'list': '',
     'HTML': '<table>\n'
@@ -16,20 +16,20 @@ CONNECTION_DETAIL_HEADER = {
             '</tr>'
 }
 
-CONNECTION_DETAIL_LINE_DELAY = {
+DESCRIPTION_LINE_DELAY = {
     'text': '{:<4} {:<5} ({}) -> {:<5} ({})   !!! {}min delayed',
     'list': '{:<4} {:<5} ({}) -> {:<5} ({})   !!! {}min delayed',
     'HTML': '<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}min</td></tr>'
 }
 
-CONNECTION_DETAIL_LINE_NO_DELAY = {
+DESCRIPTION_LINE_NO_DELAY = {
     'text': '{:<4} {:<5} ({}) -> {:<5} ({})',
     'list': '{:<4} {:<5} ({}) -> {:<5} ({})',
     'HTML': '<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td></td></tr>'
 }
 
-CONNECTION_DETAIL_FOOTER = {
+DESCRIPTION_FOOTER = {
     'text': '',
     'list': '',
-    'HTML': '</table>'
+    'HTML': '\n</table>'
 }
