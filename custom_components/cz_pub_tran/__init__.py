@@ -13,6 +13,12 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_NAME
 )
+from .constants import (
+    CONNECTION_DETAIL_HEADER,
+    CONNECTION_DETAIL_FOOTER,
+    CONNECTION_DETAIL_LINE_DELAY,
+    CONNECTION_DETAIL_LINE_NO_DELAY
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 import asyncio
@@ -67,45 +73,25 @@ class ConnectionPlatform():
             if entity.scheduled_connection(self._force_refresh_interval):
                 _LOGGER.debug( f'({entity._name}) departure already scheduled for {entity._departure} - not checking connections')
                 continue
-            await self._api.async_find_connection(entity._origin,entity._destination,entity._combination_id)
-            if self._detail_format=='list':
-                connections_long=self._api.connections
-                # departure,duration,state,connections,description,delay
-                entity.update_status(self._api.departure,self._api.duration,f'{self._api.departure} ({self._api.line})','',connections_long,'')
-            else:
-                if self._detail_format=='HTML':
-                    connections_long='<table>\n<tr><th>Line</th><th>Departure</th><th>From</th><th>Arrival</th><th>To</th><th>Delay</th></tr>'
-                else:
-                    connections_long=''
-                connections_short=''
+            if await self._api.async_find_connection(entity._origin,entity._destination,entity._combination_id):
+                detail = CONNECTION_DETAIL_HEADER[self._detail_format]
+                connections=''
                 delay=''
-                long_delim=''
-                for trains in self._api.connections:
+                for i,trains in enumerate(self._api.connections):
                     line=trains['line']
                     depTime=trains['depTime']
                     depStation=trains['depStation']
                     arrTime=trains['arrTime']
                     arrStation=trains['arrStation']
-                    if long_delim=='':
-                        connections_short=line
-                    else:
-                        connections_short=connections_short+"-"+depStation.replace(" (PZ)","")+"-"+line
+                    depStationShort="-"+depStation.replace(" (PZ)","")+"-"
+                    connections += f'{depStationShort if i>0 else ""}{line}'
                     if trains['delay'] != '':
-                        if self._detail_format=='HTML':
-                            connections_long=connections_long+f'<tr><td>{line}</td><td>{depTime}</td><td>{depStation}</td><td>{arrTime}</td><td>{arrStation}</td><td>{trains["delay"]}min</td></tr>\n'
-                        else:
-                            connections_long=connections_long+long_delim+f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})   !!! {trains["delay"]}min delayed'
-                        if delay=='':
-                            delay = f'line {line} - {trains["delay"]}min delay'
-                        else:
-                            delay = delay + f' | line {line} - {trains["delay"]}min delay'
+                        detail += ('\n' if i>0 else '') + CONNECTION_DETAIL_LINE_DELAY[self._detail_format].format(line,depTime,depStation,arrTime,arrStation,trains["delay"])
+                        delay += f'{"" if delay=="" else " | "}line {line} - {trains["delay"]}min delay'
                     else:
-                        if self._detail_format=='HTML':
-                            connections_long=connections_long+f'<tr><td>{line}</td><td>{depTime}</td><td>{depStation}</td><td>{arrTime}</td><td>{arrStation}</td><td></td></tr>\n'
-                        else:
-                            connections_long=connections_long+long_delim+f'{line:<4} {depTime:<5} ({depStation}) -> {arrTime:<5} ({arrStation})'
-                    long_delim='\n'
-                if self._detail_format=='HTML':
-                    connections_long=connections_long+'</table>'
-                entity.update_status(self._api.departure,self._api.duration,self._api.departure+" ("+connections_short+")",connections_short,connections_long,delay)
+                        detail += ('\n' if i>0 else '') + CONNECTION_DETAIL_LINE_NO_DELAY[self._detail_format].format(line,depTime,depStation,arrTime,arrStation)
+                detail += CONNECTION_DETAIL_FOOTER[self._detail_format]
+                entity.update_status(self._api.departure,self._api.duration,self._api.departure+" ("+connections+")",connections,self._api.connections if self._detail_format=='list' else detail,delay)
+            else:
+                entity.update_status('','','no connection','',[] if self._detail_format=='list' else "","")
         async_call_later(self._hass, self._scan_interval, self.async_update_Connections())
