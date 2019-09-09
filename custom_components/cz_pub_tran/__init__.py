@@ -34,6 +34,8 @@ from .sensor import (
 
 _LOGGER = logging.getLogger(__name__)
 
+STATUS_NO_CONNECTION = '-'
+
 async def async_setup(hass, config):
     """Setup the cz_pub_tran platform."""
     conf = CONFIG_SCHEMA(config).get(DOMAIN)
@@ -70,7 +72,7 @@ class ConnectionPlatform():
     async def async_update_Connections(self):
         for entity in self._connections:
             if entity.scheduled_connection(self._force_refresh_period):
-                _LOGGER.debug( f'({entity._name}) departure already scheduled for {entity._departure} - not checking connections')
+                # _LOGGER.debug( f'({entity._name}) departure already scheduled for {entity._departure} - not checking connections')
                 continue
             if await self._api.async_find_connection(entity._origin,entity._destination,entity._combination_id):
                 detail = DESCRIPTION_HEADER[self._description_format]
@@ -92,5 +94,5 @@ class ConnectionPlatform():
                 detail += DESCRIPTION_FOOTER[self._description_format]
                 entity.update_status(self._api.departure,self._api.duration,self._api.departure+" ("+connections+")",connections,self._api.connections if self._description_format=='list' else detail,delay)
             else:
-                entity.update_status('','','no connection','',[] if self._description_format=='list' else "","")
+                entity.update_status('','',STATUS_NO_CONNECTION,'',[] if self._description_format=='list' else "","")
         async_call_later(self._hass, self._scan_interval, self.async_update_Connections())
