@@ -90,9 +90,7 @@ class CZPubTranSensor(Entity):
         self._combination_id = config.get(CONF_COMBINATION_ID)
         self._forced_refresh_countdown = 1
         self.load_defaults()
-        self.entity_id=async_generate_entity_id(ENTITY_ID_FORMAT,self._name,hass.data[DOMAIN].entity_ids())
-        hass.data[DOMAIN].add_entity_id(self.entity_id)
-        _LOGGER.debug(f'Entity {self._name} inicialized')
+        # _LOGGER.debug(f'Entity {self._name} inicialized')
 
     @property
     def name(self):
@@ -155,6 +153,7 @@ class CZPubTranSensor(Entity):
         self.update_status("","","","","","")
         
     async def async_added_to_hass(self):
-        """I probably do not need this! To be removed! Call when entity is added to hass."""
+        """Entity added. Entity ID ready"""
+        self.hass.data[DOMAIN].add_entity_id(self.entity_id)
         self.hass.data[DOMAIN].add_sensor(self)
-        _LOGGER.debug(f'Entity {self.entity_id} added')
+        # _LOGGER.debug(f'Entity {self.entity_id} added')

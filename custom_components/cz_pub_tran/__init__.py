@@ -70,7 +70,7 @@ class ConnectionPlatform():
     async def async_update_Connections(self):
         for entity in self._connections:
             if entity.scheduled_connection(self._force_refresh_period):
-                _LOGGER.debug( f'({entity._name}) departure already scheduled for {entity._departure} - not checking connections')
+                # _LOGGER.debug( f'({entity._name}) departure already scheduled for {entity._departure} - not checking connections')
                 continue
             if await self._api.async_find_connection(entity._origin,entity._destination,entity._combination_id):
                 detail = DESCRIPTION_HEADER[self._description_format]
