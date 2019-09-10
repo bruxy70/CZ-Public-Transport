@@ -112,7 +112,8 @@ Connection {{index+1}}
       Current delay {{ bus["delay"] }} min
     {% endif %}
   {% endfor %}
-{% endfor %}```
+{% endfor %}
+```
 
 #### Result
 ```
