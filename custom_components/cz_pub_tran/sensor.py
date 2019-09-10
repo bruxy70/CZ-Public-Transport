@@ -22,7 +22,7 @@ ENTITY_ID_FORMAT = COMPONENT_NAME + ".{}"
 
 ICON_BUS = "mdi:bus"
 
-DESCRIPTION_FORMAT_OPTIONS = ['HTML','text','list']
+DESCRIPTION_FORMAT_OPTIONS = ['HTML','text']
 
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
@@ -35,6 +35,7 @@ ATTR_DURATION = "duration"
 ATTR_DEPARTURE = "departure"
 ATTR_CONNECTIONS = "connections"
 ATTR_DESCRIPTION = "description"
+ATTR_DETAIL = "detail"
 ATTR_DELAY = "delay"
 
 TRACKABLE_DOMAINS = ["sensor"]
@@ -111,6 +112,7 @@ class CZPubTranSensor(Entity):
         res[ATTR_DELAY] = self._delay
         res[ATTR_CONNECTIONS] = self._connections
         res[ATTR_DESCRIPTION] = self._description
+        res[ATTR_DETAIL] = self._detail
         return res
 
     @property
@@ -137,16 +139,17 @@ class CZPubTranSensor(Entity):
         except:
             return False # Refresh data on Error
 
-    def update_status(self,departure,duration,state,connections,description,delay):
+    def update_status(self,departure,duration,state,connections,description,detail,delay):
         self._departure = departure
         self._duration = duration
         self._state = state
         self._connections = connections
         self._description = description
+        self._detail = detail
         self._delay = delay
 
     def load_defaults(self):
-        self.update_status("","","","","","")
+        self.update_status("","","","","",[[],[]],"")
         
     async def async_added_to_hass(self):
         """Entity added. Entity ID ready"""

@@ -75,24 +75,25 @@ class ConnectionPlatform():
                 # _LOGGER.debug( f'({entity._name}) departure already scheduled for {entity._departure} - not checking connections')
                 continue
             if await self._api.async_find_connection(entity._origin,entity._destination,entity._combination_id):
-                detail = DESCRIPTION_HEADER[self._description_format]
+                description = DESCRIPTION_HEADER[self._description_format]
                 connections=''
                 delay=''
-                for i,trains in enumerate(self._api.connections):
-                    line=trains['line']
-                    depTime=trains['depTime']
-                    depStation=trains['depStation']
-                    arrTime=trains['arrTime']
-                    arrStation=trains['arrStation']
-                    depStationShort="-"+depStation.replace(" (PZ)","")+"-"
-                    connections += f'{depStationShort if i>0 else ""}{line}'
-                    if trains['delay'] != '':
-                        detail += ('\n' if i>0 else '') + DESCRIPTION_LINE_DELAY[self._description_format].format(line,depTime,depStation,arrTime,arrStation,trains["delay"])
-                        delay += f'{"" if delay=="" else " | "}line {line} - {trains["delay"]}min delay'
-                    else:
-                        detail += ('\n' if i>0 else '') + DESCRIPTION_LINE_NO_DELAY[self._description_format].format(line,depTime,depStation,arrTime,arrStation)
-                detail += DESCRIPTION_FOOTER[self._description_format]
-                entity.update_status(self._api.departure,self._api.duration,self._api.departure+" ("+connections+")",connections,self._api.connections if self._description_format=='list' else detail,delay)
+                if self._api.connection_detail is not None and len(self._api.connection_detail)>=1:
+                    for i,trains in enumerate(self._api.connection_detail[0]):
+                        line=trains['line']
+                        depTime=trains['depTime']
+                        depStation=trains['depStation']
+                        arrTime=trains['arrTime']
+                        arrStation=trains['arrStation']
+                        depStationShort="-"+depStation.replace(" (PZ)","")+"-"
+                        connections += f'{depStationShort if i>0 else ""}{line}'
+                        if trains['delay'] != '':
+                            description += ('\n' if i>0 else '') + DESCRIPTION_LINE_DELAY[self._description_format].format(line,depTime,depStation,arrTime,arrStation,trains["delay"])
+                            delay += f'{"" if delay=="" else " | "}line {line} - {trains["delay"]}min delay'
+                        else:
+                            description += ('\n' if i>0 else '') + DESCRIPTION_LINE_NO_DELAY[self._description_format].format(line,depTime,depStation,arrTime,arrStation)
+                description += DESCRIPTION_FOOTER[self._description_format]
+                entity.update_status(self._api.departure,self._api.duration,self._api.departure+" ("+connections+")",connections,description,self._api.connection_detail,delay)
             else:
-                entity.update_status('','',STATUS_NO_CONNECTION,'',[] if self._description_format=='list' else "","")
+                entity.update_status('','',STATUS_NO_CONNECTION,'','',None,"")
         async_call_later(self._hass, self._scan_interval, self.async_update_Connections())

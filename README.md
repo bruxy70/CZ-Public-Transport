@@ -67,7 +67,7 @@ cz_pub_tran:
 | `user_id` | Yes | ...if you have one (if you do, please let me know where you got it. Thanks!). Otherwise it will use the trial account. 
 | `scan_interval` | Yes | The sensor refresh rate (seconds)<br/>**Default**: 60
 | `force_refresh_period` | Yes | The sensor will skip update if there is already scheduled connection. But, every n-th refresh, it will force the update, to check delay changes. This can be disabled by setting this to 0.<br/>**Default**: 5  **Range**: 0-60
-| `description_format` | Yes | The **description** attribute can be rendered in 3 different formats:<br/>- **text**: plain text, each connection on 1 line (**default**)<br/>- **HTML**: HTML table<br/>- **list**: list of lidividual lines - see [bellow for example use](#Advanced---parsing-list-description)
+| `description_format` | Yes | The **description** attribute can be rendered in 2 different formats:<br/>- **text**: plain text, each connection on 1 line (**default**)<br/>- **HTML**: HTML table
 | `name` | Yes | Sensor friendly name.<br/>**Default**: cz_pub_tran
 | `origin` | No | Name of the originating bus stop
 | `destination` | No | Name of the destination bus stop
@@ -85,13 +85,14 @@ The next connection short description in format *time (bus line)*. If there are 
 | `connections` | List of the connections to take (or simply line number if this is a direct connection)
 | `duration` | Trip duration
 | `delay` | Dlayed connections (including the line number and the delay)
-| `description` | Full description of the connections - each connection on 1 line, in the format<br/>*line time (bus stop to get-in) -> time (bus stop to get-off)   (!!! delay if applicable)*<br/>Or a list of connection if **description_format** parameter is set to **list**
+| `description` | Full description of the connections - each connection on 1 line, in the format<br/>*line time (bus stop to get-in) -> time (bus stop to get-off)   (!!! delay if applicable)*,<br/>or as a HTML table
+| `detail` | A list of 2 connections. Each connection is a dictionary of values (see the example below)
 
 ### Advanced - parsing list description
-If you have configured the **description_format** as list, you can access the attributes of the individual connections.
-#### You can display them like that this example
+From the **detail attribute** you can access the attributes of the individual connections (there are 2 connections)
+#### You can display them like that this example (for sensor entity_id sensor.cz_pub_tran)
 ```yaml
-{{ states.sensor.cz_pub_tran.attributes["description"] }}
+{{ states.sensor.cz_pub_tran.attributes["description"][0] }}
 ```
 
 #### Result:
@@ -101,7 +102,7 @@ If you have configured the **description_format** as list, you can access the at
 
 #### Or you can parse them using scipt:
 ```yaml
-{% for bus in states.sensor.cz_pub_tran.attributes["description"] %}
+{% for bus in states.sensor.cz_pub_tran.attributes["description"][0] %}
   Line: {{ bus["line"] }}
   Departure time {{ bus["depTime"] }} from {{ bus["depStation"] }}
   Arrival time {{ bus["arrTime"] }} to {{ bus["arrStation"] }}
@@ -121,6 +122,8 @@ If you have configured the **description_format** as list, you can access the at
   Departure time 14:25 from Lihovar
   Arrival time 14:35 to Poliklinika Barrandov
 ```
+
+For the second connection you'd use **sensor.cz_pub_tran.attributes["description"][1]**
 
 ---
 <a href="https://www.buymeacoffee.com/3nXx0bJDP" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/white_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
