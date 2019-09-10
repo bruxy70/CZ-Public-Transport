@@ -92,38 +92,53 @@ The next connection short description in format *time (bus line)*. If there are 
 From the **detail attribute** you can access the attributes of the individual connections (there are 2 connections)
 #### You can display them like that this example (for sensor entity_id sensor.cz_pub_tran)
 ```yaml
-{{ states.sensor.cz_pub_tran.attributes["description"][0] }}
+{{ states.sensor.cz_pub_tran.attributes["detail"][0] }}
 ```
 
 #### Result:
 ```
-[{'line': '129', 'depTime': '14:06', 'depStation': 'Zbraslavské náměstí', 'arrTime': '14:16', 'arrStation': 'Lihovar', 'delay': ''}, {'line': '20', 'depTime': '14:25', 'depStation': 'Lihovar', 'arrTime': '14:35', 'arrStation': 'Poliklinika Barrandov', 'delay': ''}]
+[{'line': '241', 'depTime': '23:08', 'depStation': 'Zbraslavské náměstí', 'arrTime': '23:17', 'arrStation': 'Lihovar', 'delay': ''}, {'line': '5', 'depTime': '23:24', 'depStation': 'Lihovar', 'arrTime': '23:33', 'arrStation': 'Poliklinika Barrandov', 'delay': ''}]
 ```
 
 #### Or you can parse them using scipt:
 ```yaml
-{% for bus in states.sensor.cz_pub_tran.attributes["description"][0] %}
-  Line: {{ bus["line"] }}
-  Departure time {{ bus["depTime"] }} from {{ bus["depStation"] }}
-  Arrival time {{ bus["arrTime"] }} to {{ bus["arrStation"] }}
-  {%- if bus["delay"] != "" %}
-    Current delay {{ bus["delay"] }} min
-  {% endif %}
-{% endfor %}
-```
+{% for index in [0,1] %}
+Connection {{index+1}}
+  {% for bus in states.sensor.cz_pub_tran.attributes["detail"][index] %}
+    Line: {{ bus["line"] }}
+    Departure time {{ bus["depTime"] }} from {{ bus["depStation"] }}
+    Arrival time {{ bus["arrTime"] }} to {{ bus["arrStation"] }}
+    {%- if bus["delay"] != "" %}
+      Current delay {{ bus["delay"] }} min
+    {% endif %}
+  {% endfor %}
+{% endfor %}```
 
 #### Result
 ```
-  Line: 129
-  Departure time 14:06 from Zbraslavské náměstí
-  Arrival time 14:16 to Lihovar
+Connection 1
+  
+    Line: 129
+    Departure time 22:48 from Zbraslavské náměstí
+    Arrival time 22:57 to Lihovar
+  
+    Line: 5
+    Departure time 23:04 from Lihovar
+    Arrival time 23:13 to Poliklinika Barrandov
+  
 
-  Line: 20
-  Departure time 14:25 from Lihovar
-  Arrival time 14:35 to Poliklinika Barrandov
+Connection 2
+  
+    Line: 241
+    Departure time 23:08 from Zbraslavské náměstí
+    Arrival time 23:17 to Lihovar
+  
+    Line: 5
+    Departure time 23:24 from Lihovar
+    Arrival time 23:33 to Poliklinika Barrandov
 ```
 
-For the second connection you'd use **sensor.cz_pub_tran.attributes["description"][1]**
+For the second connection you'd use **states.sensor.cz_pub_tran.attributes["detail"][1]**
 
 ---
 <a href="https://www.buymeacoffee.com/3nXx0bJDP" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/white_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
