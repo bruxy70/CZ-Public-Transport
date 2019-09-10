@@ -129,7 +129,7 @@ class CZPubTranSensor(Entity):
                 return bool(now < departure_time or ( now.hour> 22 and departure_time < 6 ))
             else:
                 if now < departure_time or ( now.hour> 22 and departure_time < 6 ):
-                    self._forced_refresh_countdown =- 1
+                    self._forced_refresh_countdown -= 1
                     return True
                 else:
                     self._forced_refresh_countdown = forced_refresh_period
