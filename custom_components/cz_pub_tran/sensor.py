@@ -36,6 +36,7 @@ ATTR_DEPARTURE = "departure"
 ATTR_CONNECTIONS = "connections"
 ATTR_DESCRIPTION = "description"
 ATTR_DETAIL = "detail"
+ATTR_START_TIME = "start_time"
 ATTR_DELAY = "delay"
 
 TRACKABLE_DOMAINS = ["sensor"]
@@ -90,6 +91,7 @@ class CZPubTranSensor(Entity):
         self._destination = config.get(CONF_DESTINATION)
         self._combination_id = config.get(CONF_COMBINATION_ID)
         self._forced_refresh_countdown = 1
+        self._start_time = None
         self.load_defaults()
         # _LOGGER.debug(f'Entity {self._name} inicialized')
 
@@ -112,6 +114,7 @@ class CZPubTranSensor(Entity):
         res[ATTR_DELAY] = self._delay
         res[ATTR_CONNECTIONS] = self._connections
         res[ATTR_DESCRIPTION] = self._description
+        res[ATTR_START_TIME] = self._start_time
         res[ATTR_DETAIL] = self._detail
         return res
 

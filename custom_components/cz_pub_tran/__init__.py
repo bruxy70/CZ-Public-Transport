@@ -74,7 +74,7 @@ class ConnectionPlatform():
             if entity.scheduled_connection(self._force_refresh_period):
                 # _LOGGER.debug( f'({entity._name}) departure already scheduled for {entity._departure} - not checking connections')
                 continue
-            if await self._api.async_find_connection(entity._origin,entity._destination,entity._combination_id):
+            if await self._api.async_find_connection(entity._origin,entity._destination,entity._combination_id,entity._start_time):
                 description = DESCRIPTION_HEADER[self._description_format]
                 connections=''
                 delay=''
