@@ -121,19 +121,15 @@ class CZPubTranSensor(Entity):
         """Return False if Connection needs to be updated."""
         try:
             if self._forced_refresh_countdown <= 0 or self._departure == '':
+                self._forced_refresh_countdown = forced_refresh_period if forced_refresh_period > 0 else 1
                 return False
+            departure_time=datetime.strptime(self._departure,"%H:%M").time()
+            now=datetime.now().time()
             if forced_refresh_period == 0:
-                departure_time=datetime.strptime(self._departure,"%H:%M").time()
-                now=datetime.now().time()
                 return bool(now < departure_time or ( now.hour> 22 and departure_time < 6 ))
             else:
-                if self._forced_refresh_countdown <= 0 or self._departure == '':
-                    self._forced_refresh_countdown = forced_refresh_period
-                    return False
-                departure_time=datetime.strptime(self._departure,"%H:%M").time()
-                now=datetime.now().time()
                 if now < departure_time or ( now.hour> 22 and departure_time < 6 ):
-                    self._forced_refresh_countdown = self._forced_refresh_countdown - 1
+                    self._forced_refresh_countdown =- 1
                     return True
                 else:
                     self._forced_refresh_countdown = forced_refresh_period
