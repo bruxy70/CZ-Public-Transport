@@ -138,8 +138,5 @@ Connection 2
     Departure time 23:24 from Lihovar
     Arrival time 23:33 to Poliklinika Barrandov
 ```
-
-For the second connection you'd use **states.sensor.cz_pub_tran.attributes["detail"][1]**
-
 ---
 <a href="https://www.buymeacoffee.com/3nXx0bJDP" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/white_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
