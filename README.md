@@ -48,7 +48,7 @@ cz_pub_tran:
 cz_pub_tran:
   user_id: <no idea where to get one>
   scan_interval: 120
-  force_refresh_interval: 5
+  force_refresh_period: 0
   detail_format: HTML
   sensors:
     - name: "Zbraslav-Barrandov"
