@@ -93,7 +93,6 @@ class CZPubTranSensor(Entity):
         self._forced_refresh_countdown = 1
         self._start_time = None
         self.load_defaults()
-        # _LOGGER.debug(f'Entity {self._name} inicialized')
 
     @property
     def name(self):
@@ -126,26 +125,21 @@ class CZPubTranSensor(Entity):
         """Return False if Connection needs to be updated."""
         try:
             if self._forced_refresh_countdown <= 0 or self._departure == '':
-                # _LOGGER.debug(f'Entity {self.entity_id} - Refreshing - forced refresh countdown expired')
                 self._forced_refresh_countdown = forced_refresh_period if forced_refresh_period > 0 else 1
                 return False
             departure_time=datetime.strptime(self._departure,"%H:%M").time()
             now=datetime.now().time()
             connection_valid = bool(now < departure_time or ( now.hour> 22 and departure_time < 6 ))
             if forced_refresh_period == 0:
-                # _LOGGER.debug(f'Entity {self.entity_id} - Forced refresh disabled - Connection valid? {connection_valid}')
                 return bool(now < departure_time or ( now.hour> 22 and departure_time < 6 ))
             else:
                 if connection_valid:
                     self._forced_refresh_countdown -= 1
-                    # _LOGGER.debug(f'Entity {self.entity_id} - Not refreshing - decrementing countdown to {self._forced_refresh_countdown}')
                     return True
                 else:
                     self._forced_refresh_countdown = forced_refresh_period
-                    # _LOGGER.debug(f'Entity {self.entity_id} - Refreshing - new connection needed')
                     return False
         except:
-            # _LOGGER.debug(f'Entity {self.entity_id} - Refreshing - exception occured')
             return False # Refresh data on Error
 
     def update_status(self,departure,duration,state,connections,description,detail,delay):
@@ -164,4 +158,3 @@ class CZPubTranSensor(Entity):
         """Entity added. Entity ID ready"""
         self.hass.data[DOMAIN].add_entity_id(self.entity_id)
         self.hass.data[DOMAIN].add_sensor(self)
-        # _LOGGER.debug(f'Entity {self.entity_id} added')
