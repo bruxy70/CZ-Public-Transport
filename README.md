@@ -91,6 +91,7 @@ The next connection short description in format *time (bus line)*. If there are 
 
 ## SERVICE sensor.set_start_time
 Set the time to start searching for connections
+
 | Attribute | Description
 |:---------|-----------
 | `entity_id` | ID of the sensor (e.g. sensor.bus_to_work)
