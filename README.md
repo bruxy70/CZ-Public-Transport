@@ -75,10 +75,10 @@ cz_pub_tran:
 | `combination_id` | Yes | Name of the combination of timetables.<br/>**Default**: `ABCz`
 
 ## STATE AND ATTRIBUTES
-### State
+### STATE
 The next connection short description in format *time (bus line)*. If there are line changes to be made, the status will only show the first connection (see attribute description for the complete plan)
 
-### Attributes
+### ATTRIBUTES
 | Attribute | Description
 |:---------|-----------
 | `departure` | Departure time
@@ -89,19 +89,27 @@ The next connection short description in format *time (bus line)*. If there are 
 | `description` | Full description of the connections - each connection on 1 line, in the format<br/>*line time (bus stop to get-in) -> time (bus stop to get-off)   (!!! delay if applicable)*,<br/>or as a HTML table
 | `detail` | A list of 2 connections. Each connection is a dictionary of values (see the example below)
 
-### Advanced - parsing list description
+## SERVICE sensor.set_start_time
+Set the time to start searching for connections
+| Attribute | Description
+|:---------|-----------
+| `entity_id` | ID of the sensor (e.g. sensor.bus_to_work)
+| `start_time` | The starting time. Call the service without this parameter to remove the start time (search from the current time)
+
+
+## ADVANCED - parsing list description
 From the **detail attribute** you can access the attributes of the individual connections (there are 2 connections)
-#### You can display them like that this example (for sensor entity_id sensor.cz_pub_tran)
+### You can display them like that this example (for sensor entity_id sensor.cz_pub_tran)
 ```yaml
 {{ states.sensor.cz_pub_tran.attributes["detail"][0] }}
 ```
 
-#### Result:
+### Result:
 ```
 [{'line': '241', 'depTime': '23:08', 'depStation': 'Zbraslavské náměstí', 'arrTime': '23:17', 'arrStation': 'Lihovar', 'delay': ''}, {'line': '5', 'depTime': '23:24', 'depStation': 'Lihovar', 'arrTime': '23:33', 'arrStation': 'Poliklinika Barrandov', 'delay': ''}]
 ```
 
-#### Or you can parse them using scipt:
+### Or you can parse them using scipt:
 ```yaml
 {% for index in [0,1] %}
 Connection {{index+1}}
@@ -116,7 +124,7 @@ Connection {{index+1}}
 {% endfor %}
 ```
 
-#### Result
+### Result
 ```
 Connection 1
   

@@ -11,6 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
+    CONF_ENTITY_ID,
     CONF_NAME
 )
 from .constants import (
@@ -29,6 +30,8 @@ from .sensor import (
     CONF_FORCE_REFRESH_PERIOD,
     CONF_DESCRIPTION_FORMAT,
     CONFIG_SCHEMA,
+    SET_START_TIME_SCHEMA,
+    ATTR_START_TIME,  
     COMPONENT_NAME
 )
 
@@ -46,6 +49,7 @@ async def async_setup(hass, config):
     session = async_get_clientsession(hass)
     hass.data[DOMAIN]= ConnectionPlatform(hass,user_id,scan_interval,force_refresh_period,description_format,session)
     hass.helpers.discovery.load_platform(COMPONENT_NAME,DOMAIN, conf[CONF_SENSORS], config)
+    hass.services.async_register(DOMAIN, 'set_start_time', hass.data[DOMAIN].handle_set_time, schema=SET_START_TIME_SCHEMA)
     async_call_later(hass,1, hass.data[DOMAIN].async_update_Connections())
     return True
 
@@ -59,6 +63,20 @@ class ConnectionPlatform():
         self._entity_ids = []
         self._connections = []
         self._api = czpubtran(session,user_id)
+
+    def handle_set_time(self,call):
+        """Handle the cz_pub_tran.set_time call"""
+        _time = call.data.get(ATTR_START_TIME)
+        _entity_id = call.data.get(CONF_ENTITY_ID)
+        if _time is None:
+            _LOGGER.debug(f'Received call to reset the start time in {_entity_id}')
+        else:
+            _LOGGER.debug(f'Received call to set the start time in entity {_entity_id} to {_time}')
+        entity = next((entity for entity in self._connections if entity.entity_id==_entity_id),None)
+        if entity is not None: 
+            entity._start_time=None if _time is None else _time.strftime("%H:%M")
+            entity.load_defaults()
+            async_call_later(self._hass,0, self.async_update_Connections())
 
     def add_sensor(self,sensor):
         self._connections.append(sensor)

@@ -7,6 +7,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
+    CONF_ENTITY_ID,
     CONF_NAME
 )
 from homeassistant.core import HomeAssistant, State
@@ -55,6 +56,13 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Optional(CONF_COMBINATION_ID, default=DEFAULT_COMBINATION_ID): cv.string,
+    }
+)
+
+SET_START_TIME_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_START_TIME): cv.time,
+        vol.Required(CONF_ENTITY_ID): cv.string,
     }
 )
 
