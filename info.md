@@ -39,10 +39,10 @@ For more detailed configuration please look at the <a href="https://github.com/b
 | `combination_id` | Yes | Name of the combination of timetables.<br/>**Default**: `ABCz`
 
 ## STATE AND ATTRIBUTES
-### State
+### STATE
 The next connection short description in format *time (bus line)*. If there are line changes to be made, the status will only show the first connection (see attribute description for the complete plan)
 
-### Attributes
+### ATTRIBUTES
 | Attribute | Description
 |:---------|-----------
 | `departure` | Departure time
@@ -52,6 +52,9 @@ The next connection short description in format *time (bus line)*. If there are 
 | `delay` | Dlayed connections (including the line number and the delay)
 | `description` | Full description of the connections - each connection on 1 line, in the format<br/>*line time (bus stop to get-in) -> time (bus stop to get-off)   (!!! delay if applicable)*,<br/>or as a HTML table
 | `detail` | A list of 2 connections. Each connection is a dictionary of values (see the example at the end of <a href="https://github.com/bruxy70/CZ-Public-Transport/blob/master/README.md">README.md</a>)
+
+## SERVICE sensor.set_start_time
+Set the time to start searching for connections - see <a href="https://github.com/bruxy70/CZ-Public-Transport/blob/master/README.md">README.md</a>) for details
 
 ---
 <a href="https://www.buymeacoffee.com/3nXx0bJDP" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/white_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>

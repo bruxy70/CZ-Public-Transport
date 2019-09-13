@@ -94,8 +94,8 @@ Set the time to start searching for connections
 
 | Attribute | Description
 |:---------|-----------
-| `entity_id` | ID of the sensor (e.g. sensor.bus_to_work)
-| `start_time` | The starting time. Call the service without this parameter to remove the start time (search from the current time)
+| `entity_id` | ID of the sensor (e.g. `sensor.bus_to_work`)
+| `start_time` | The starting time (e.g. `'19:30'`). Call the service without this parameter to remove the start time (search from the current time)
 
 
 ## ADVANCED - parsing list description
