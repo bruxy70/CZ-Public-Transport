@@ -1,0 +1,9 @@
+set_start_time:
+  description: Search for the connections starting from time onwards.
+  fields:
+    entity_id:
+      description: Name of the cz_pub_tran sensor to set the start time 
+      example: sensor.bus_to_work
+    start_time:
+      description: The start time. Call the service without this parameter to remove the start time (search from the current time)
+      example: '18:00'

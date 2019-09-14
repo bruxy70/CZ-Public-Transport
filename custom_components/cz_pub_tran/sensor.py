@@ -7,6 +7,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
+    CONF_ENTITY_ID,
     CONF_NAME
 )
 from homeassistant.core import HomeAssistant, State
@@ -22,7 +23,7 @@ ENTITY_ID_FORMAT = COMPONENT_NAME + ".{}"
 
 ICON_BUS = "mdi:bus"
 
-DESCRIPTION_FORMAT_OPTIONS = ['HTML','text','list']
+DESCRIPTION_FORMAT_OPTIONS = ['HTML','text']
 
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
@@ -35,6 +36,8 @@ ATTR_DURATION = "duration"
 ATTR_DEPARTURE = "departure"
 ATTR_CONNECTIONS = "connections"
 ATTR_DESCRIPTION = "description"
+ATTR_DETAIL = "detail"
+ATTR_START_TIME = "start_time"
 ATTR_DELAY = "delay"
 
 TRACKABLE_DOMAINS = ["sensor"]
@@ -53,6 +56,13 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Optional(CONF_COMBINATION_ID, default=DEFAULT_COMBINATION_ID): cv.string,
+    }
+)
+
+SET_START_TIME_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_START_TIME): cv.time,
+        vol.Required(CONF_ENTITY_ID): cv.string,
     }
 )
 
@@ -89,8 +99,8 @@ class CZPubTranSensor(Entity):
         self._destination = config.get(CONF_DESTINATION)
         self._combination_id = config.get(CONF_COMBINATION_ID)
         self._forced_refresh_countdown = 1
+        self._start_time = None
         self.load_defaults()
-        # _LOGGER.debug(f'Entity {self._name} inicialized')
 
     @property
     def name(self):
@@ -111,6 +121,8 @@ class CZPubTranSensor(Entity):
         res[ATTR_DELAY] = self._delay
         res[ATTR_CONNECTIONS] = self._connections
         res[ATTR_DESCRIPTION] = self._description
+        res[ATTR_START_TIME] = self._start_time
+        res[ATTR_DETAIL] = self._detail
         return res
 
     @property
@@ -125,10 +137,11 @@ class CZPubTranSensor(Entity):
                 return False
             departure_time=datetime.strptime(self._departure,"%H:%M").time()
             now=datetime.now().time()
+            connection_valid = bool(now < departure_time or ( now.hour> 22 and departure_time < 6 ))
             if forced_refresh_period == 0:
                 return bool(now < departure_time or ( now.hour> 22 and departure_time < 6 ))
             else:
-                if now < departure_time or ( now.hour> 22 and departure_time < 6 ):
+                if connection_valid:
                     self._forced_refresh_countdown -= 1
                     return True
                 else:
@@ -137,19 +150,19 @@ class CZPubTranSensor(Entity):
         except:
             return False # Refresh data on Error
 
-    def update_status(self,departure,duration,state,connections,description,delay):
+    def update_status(self,departure,duration,state,connections,description,detail,delay):
         self._departure = departure
         self._duration = duration
         self._state = state
         self._connections = connections
         self._description = description
+        self._detail = detail
         self._delay = delay
 
     def load_defaults(self):
-        self.update_status("","","","","","")
+        self.update_status("","","","","",[[],[]],"")
         
     async def async_added_to_hass(self):
         """Entity added. Entity ID ready"""
         self.hass.data[DOMAIN].add_entity_id(self.entity_id)
         self.hass.data[DOMAIN].add_sensor(self)
-        # _LOGGER.debug(f'Entity {self.entity_id} added')
