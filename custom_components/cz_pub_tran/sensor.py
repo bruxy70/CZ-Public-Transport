@@ -129,17 +129,17 @@ class CZPubTranSensor(Entity):
     def icon(self):
         return ICON_BUS
 
-    def scheduled_connection(self,forced_refresh_period):
+    def scheduled_connection(self, forced_refresh_period):
         """Return False if Connection needs to be updated."""
         try:
             if self._forced_refresh_countdown <= 0 or self._departure == '':
                 self._forced_refresh_countdown = forced_refresh_period if forced_refresh_period > 0 else 1
                 return False
-            departure_time=datetime.strptime(self._departure,"%H:%M").time()
+            departure_time=datetime.strptime(self._departure, "%H:%M").time()
             now=datetime.now().time()
-            connection_valid = bool(now < departure_time or ( now.hour> 22 and departure_time < 6 ))
+            connection_valid = bool(now < departure_time or ( now.hour > 22 and departure_time < 6 ))
             if forced_refresh_period == 0:
-                return bool(now < departure_time or ( now.hour> 22 and departure_time < 6 ))
+                return bool(now < departure_time or ( now.hour > 22 and departure_time < 6 ))
             else:
                 if connection_valid:
                     self._forced_refresh_countdown -= 1
@@ -150,7 +150,7 @@ class CZPubTranSensor(Entity):
         except:
             return False # Refresh data on Error
 
-    def update_status(self,departure,duration,state,connections,description,detail,delay):
+    def update_status(self, departure, duration, state, connections, description, detail, delay):
         self._departure = departure
         self._duration = duration
         self._state = state
@@ -160,7 +160,7 @@ class CZPubTranSensor(Entity):
         self._delay = delay
 
     def load_defaults(self):
-        self.update_status("","","","","",[[],[]],"")
+        self.update_status("", "", "", "", "", [[], []], "")
         
     async def async_added_to_hass(self):
         """Entity added. Entity ID ready"""
