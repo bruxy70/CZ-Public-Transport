@@ -108,7 +108,10 @@ class ConnectionPlatform():
             None
         )
         if entity is not None:
-            entity._start_time = None if _time is None else _time.strftime("%H:%M")
+            if _time is None:
+                entity._start_time = None
+            else:
+                entity._start_time = _time.strftime("%H:%M")
             entity.load_defaults()
             async_call_later(self._hass, 0, self.async_update_Connections())
 
@@ -138,7 +141,8 @@ class ConnectionPlatform():
                 description = DESCRIPTION_HEADER[self._description_format]
                 connections = ''
                 delay = ''
-                if self._api.connection_detail is not None and len(self._api.connection_detail) >= 1:
+                if (self._api.connection_detail is not None and
+                        len(self._api.connection_detail) >= 1):
                     for i, trains in enumerate(self._api.connection_detail[0]):
                         line = trains['line']
                         depTime = trains['depTime']

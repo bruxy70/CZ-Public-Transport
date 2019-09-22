@@ -2,7 +2,7 @@
   "domain": "cz_pub_tran",
   "name": "CZ Public Transport",
   "documentation": "https://github.com/bruxy70/CZ-Public-Transport/",
-  "requirements": ["czpubtran==0.1.18"],
+  "requirements": ["czpubtran==0.1.19"],
   "dependencies": [],
   "codeowners": ["@bruxy70"]
 }
