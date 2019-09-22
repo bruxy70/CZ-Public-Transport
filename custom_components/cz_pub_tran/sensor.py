@@ -23,7 +23,7 @@ ENTITY_ID_FORMAT = COMPONENT_NAME + ".{}"
 
 ICON_BUS = "mdi:bus"
 
-DESCRIPTION_FORMAT_OPTIONS = ['HTML','text']
+DESCRIPTION_FORMAT_OPTIONS = ['HTML', 'text']
 
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
@@ -55,7 +55,10 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
-        vol.Optional(CONF_COMBINATION_ID, default=DEFAULT_COMBINATION_ID): cv.string,
+        vol.Optional(
+            CONF_COMBINATION_ID,
+            default=DEFAULT_COMBINATION_ID
+        ): cv.string,
     }
 )
 
@@ -70,25 +73,44 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_USERID,default=""): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-                vol.Optional(CONF_DESCRIPTION_FORMAT, default=DEFAULT_DESCRIPTION_FORMAT): vol.In(DESCRIPTION_FORMAT_OPTIONS),
-                vol.Optional(CONF_FORCE_REFRESH_PERIOD, default=DEFAULT_FORCE_REFRESH_PERIOD): vol.All(vol.Coerce(int), vol.Range(min=0, max=60)),
-                vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA])
+                vol.Optional(
+                    CONF_USERID,
+                    default=""
+                ): cv.string,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=DEFAULT_SCAN_INTERVAL): cv.time_period,
+                vol.Optional(
+                    CONF_DESCRIPTION_FORMAT,
+                    default=DEFAULT_DESCRIPTION_FORMAT
+                ): vol.In(DESCRIPTION_FORMAT_OPTIONS),
+                vol.Optional(
+                    CONF_FORCE_REFRESH_PERIOD,
+                    default=DEFAULT_FORCE_REFRESH_PERIOD
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=60)),
+                vol.Optional(
+                    CONF_SENSORS
+                ): vol.All(cv.ensure_list, [SENSOR_SCHEMA])
             }
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass,
+    config,
+    async_add_entities,
+    discovery_info=None
+):
     """Setup the sensor platform."""
     if discovery_info is None:
         return
     devs = []
     for sensor in discovery_info:
         devs.append(CZPubTranSensor(hass, SENSOR_SCHEMA(sensor)))
-    async_add_entities(devs,True)
+    async_add_entities(devs, True)
+
 
 class CZPubTranSensor(Entity):
     """Representation of a openroute service travel time sensor."""
@@ -133,13 +155,21 @@ class CZPubTranSensor(Entity):
         """Return False if Connection needs to be updated."""
         try:
             if self._forced_refresh_countdown <= 0 or self._departure == '':
-                self._forced_refresh_countdown = forced_refresh_period if forced_refresh_period > 0 else 1
+                self._forced_refresh_countdown = \
+                    forced_refresh_period if forced_refresh_period > 0 \
+                    else 1
                 return False
-            departure_time=datetime.strptime(self._departure, "%H:%M").time()
-            now=datetime.now().time()
-            connection_valid = bool(now < departure_time or ( now.hour > 22 and departure_time < 6 ))
+            departure_time = datetime.strptime(self._departure, "%H:%M").time()
+            now = datetime.now().time()
+            connection_valid = bool(
+                now < departure_time or
+                (now.hour > 22 and departure_time < 6)
+            )
             if forced_refresh_period == 0:
-                return bool(now < departure_time or ( now.hour > 22 and departure_time < 6 ))
+                return bool(
+                    now < departure_time or
+                    (now.hour > 22 and departure_time < 6)
+                )
             else:
                 if connection_valid:
                     self._forced_refresh_countdown -= 1
@@ -148,9 +178,18 @@ class CZPubTranSensor(Entity):
                     self._forced_refresh_countdown = forced_refresh_period
                     return False
         except:
-            return False # Refresh data on Error
+            return False  # Refresh data on Error
 
-    def update_status(self, departure, duration, state, connections, description, detail, delay):
+    def update_status(
+        self,
+        departure,
+        duration,
+        state,
+        connections,
+        description,
+        detail,
+        delay
+    ):
         self._departure = departure
         self._duration = duration
         self._state = state
@@ -161,7 +200,7 @@ class CZPubTranSensor(Entity):
 
     def load_defaults(self):
         self.update_status("", "", "", "", "", [[], []], "")
-        
+
     async def async_added_to_hass(self):
         """Entity added. Entity ID ready"""
         self.hass.data[DOMAIN].add_entity_id(self.entity_id)
