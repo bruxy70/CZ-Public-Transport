@@ -1,3 +1,7 @@
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs) [![CZ-Public-Transport](https://img.shields.io/github/v/release/bruxy70/CZ-Public-Transport.svg?1)](https://github.com/bruxy70/CZ-Public-Transport) ![Maintenance](https://img.shields.io/maintenance/yes/2019.svg)
+
+[![Buy me a coffee](https://img.shields.io/static/v1.svg?label=Buy%20me%20a%20coffee&message=🥨&color=black&logo=buy%20me%20a%20coffee&logoColor=white&labelColor=6f4e37)](https://www.buymeacoffee.com/3nXx0bJDP)
+
 # Czech Public Transport
 
 The `CZ-Public-Transport` component is a Home Assistant custom sensor that finds Public Transport connections in the Czech Republic. It uses test version of CRWS - an REST API managed by CHAPS s.r.o. The test version is unfortunately limited to limited combinations of connections - ABCz, witch is PID (Pražská Integrovaná Doprava) without trains. The full version would require client ID, but CHAPS does not provide that to public as far as I know. I did write them an email about my intention to write this sensor, but they did not respond. 
@@ -148,5 +152,3 @@ Connection 2
     Departure time 23:24 from Lihovar
     Arrival time 23:33 to Poliklinika Barrandov
 ```
----
-<a href="https://www.buymeacoffee.com/3nXx0bJDP" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/white_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
