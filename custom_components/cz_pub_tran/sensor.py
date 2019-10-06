@@ -116,35 +116,60 @@ class CZPubTranSensor(Entity):
     """Representation of a openroute service travel time sensor."""
     def __init__(self, hass, config):
         """Initialize the sensor."""
-        self._name = config.get(CONF_NAME)
-        self._origin = config.get(CONF_ORIGIN)
-        self._destination = config.get(CONF_DESTINATION)
-        self._combination_id = config.get(CONF_COMBINATION_ID)
-        self._forced_refresh_countdown = 1
-        self._start_time = None
+        self.__name = config.get(CONF_NAME)
+        self.__origin = config.get(CONF_ORIGIN)
+        self.__destination = config.get(CONF_DESTINATION)
+        self.__combination_id = config.get(CONF_COMBINATION_ID)
+        self.__forced_refresh_countdown = 1
+        self.__start_time = None
         self.load_defaults()
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self.__name
+
+    @property
+    def origin(self):
+        """Return the origin."""
+        return self.__origin
+
+    @property
+    def destination(self):
+        """Return the destination."""
+        return self.__destination
+
+    @property
+    def combination_id(self):
+        """Return the combination id."""
+        return self.__combination_id
+
+    @property
+    def start_time(self):
+        """Return the start time."""
+        return self.__start_time
+
+    @start_time.setter
+    def start_time(self, value):
+        """Sets start time property"""
+        self.__start_time = value
 
     @property
     def state(self):
         """Return the name of the sensor."""
-        return self._state
+        return self.__state
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         res = {}
-        res[ATTR_DEPARTURE] = self._departure
-        res[ATTR_DURATION] = self._duration
-        res[ATTR_DELAY] = self._delay
-        res[ATTR_CONNECTIONS] = self._connections
-        res[ATTR_DESCRIPTION] = self._description
-        res[ATTR_START_TIME] = self._start_time
-        res[ATTR_DETAIL] = self._detail
+        res[ATTR_DEPARTURE] = self.__departure
+        res[ATTR_DURATION] = self.__duration
+        res[ATTR_DELAY] = self.__delay
+        res[ATTR_CONNECTIONS] = self.__connections
+        res[ATTR_DESCRIPTION] = self.__description
+        res[ATTR_START_TIME] = self.__start_time
+        res[ATTR_DETAIL] = self.__detail
         return res
 
     @property
@@ -154,12 +179,12 @@ class CZPubTranSensor(Entity):
     def scheduled_connection(self, forced_refresh_period):
         """Return False if Connection needs to be updated."""
         try:
-            if self._forced_refresh_countdown <= 0 or self._departure == '':
-                self._forced_refresh_countdown = \
+            if self.__forced_refresh_countdown <= 0 or self.__departure == '':
+                self.__forced_refresh_countdown = \
                     forced_refresh_period if forced_refresh_period > 0 \
                     else 1
                 return False
-            departure_time = datetime.strptime(self._departure, "%H:%M").time()
+            departure_time = datetime.strptime(self.__departure, "%H:%M").time()
             now = datetime.now().time()
             connection_valid = bool(
                 now < departure_time or
@@ -172,10 +197,10 @@ class CZPubTranSensor(Entity):
                 )
             else:
                 if connection_valid:
-                    self._forced_refresh_countdown -= 1
+                    self.__forced_refresh_countdown -= 1
                     return True
                 else:
-                    self._forced_refresh_countdown = forced_refresh_period
+                    self.__forced_refresh_countdown = forced_refresh_period
                     return False
         except:
             return False  # Refresh data on Error
@@ -190,13 +215,13 @@ class CZPubTranSensor(Entity):
         detail,
         delay
     ):
-        self._departure = departure
-        self._duration = duration
-        self._state = state
-        self._connections = connections
-        self._description = description
-        self._detail = detail
-        self._delay = delay
+        self.__departure = departure
+        self.__duration = duration
+        self.__state = state
+        self.__connections = connections
+        self.__description = description
+        self.__detail = detail
+        self.__delay = delay
 
     def load_defaults(self):
         self.update_status("", "", "", "", "", [[], []], "")
