@@ -12,19 +12,13 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_ENTITY_ID,
-    CONF_NAME
+    CONF_NAME,
 )
 from .constants import (
     DESCRIPTION_HEADER,
     DESCRIPTION_FOOTER,
     DESCRIPTION_LINE_DELAY,
-    DESCRIPTION_LINE_NO_DELAY
-)
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
-import asyncio
-from homeassistant.helpers.event import async_call_later
-from .sensor import (
+    DESCRIPTION_LINE_NO_DELAY,
     DOMAIN,
     CONF_USERID,
     CONF_FORCE_REFRESH_PERIOD,
@@ -32,12 +26,17 @@ from .sensor import (
     CONFIG_SCHEMA,
     SET_START_TIME_SCHEMA,
     ATTR_START_TIME,
-    COMPONENT_NAME
+    COMPONENT_NAME,
 )
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
+import asyncio
+from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
 
-STATUS_NO_CONNECTION = '-'
+STATUS_NO_CONNECTION = "-"
+
 
 async def async_setup(hass, config):
     """Setup the cz_pub_tran platform."""
@@ -48,30 +47,22 @@ async def async_setup(hass, config):
     description_format = conf.get(CONF_DESCRIPTION_FORMAT)
     session = async_get_clientsession(hass)
     hass.data[DOMAIN] = ConnectionPlatform(
-        hass,
-        user_id,
-        scan_interval,
-        force_refresh_period,
-        description_format,
-        session
+        hass, user_id, scan_interval, force_refresh_period, description_format, session
     )
     hass.helpers.discovery.load_platform(
-        COMPONENT_NAME,
-        DOMAIN,
-        conf[CONF_SENSORS],
-        config
+        COMPONENT_NAME, DOMAIN, conf[CONF_SENSORS], config
     )
     hass.services.async_register(
         DOMAIN,
-        'set_start_time',
+        "set_start_time",
         hass.data[DOMAIN].handle_set_time,
-        schema=SET_START_TIME_SCHEMA
+        schema=SET_START_TIME_SCHEMA,
     )
     async_call_later(hass, 1, hass.data[DOMAIN].async_update_Connections())
     return True
 
 
-class ConnectionPlatform():
+class ConnectionPlatform:
     def __init__(
         self,
         hass,
@@ -79,7 +70,7 @@ class ConnectionPlatform():
         scan_interval,
         force_refresh_period,
         description_format,
-        session
+        session,
     ):
         self.__hass = hass
         self.__user_id = user_id
@@ -95,17 +86,15 @@ class ConnectionPlatform():
         _time = call.data.get(ATTR_START_TIME)
         _entity_id = call.data.get(CONF_ENTITY_ID)
         if _time is None:
-            _LOGGER.debug(
-                f'Received call to reset the start time in {_entity_id}'
-            )
+            _LOGGER.debug(f"Received call to reset the start time in {_entity_id}")
         else:
             _LOGGER.debug(
-                f'Received call to set the start time in entity {_entity_id} '
-                f'to {_time}'
+                f"Received call to set the start time in entity {_entity_id} "
+                f"to {_time}"
             )
         entity = next(
             (entity for entity in self.__connections if entity.entity_id == _entity_id),
-            None
+            None,
         )
         if entity is not None:
             if _time is None:
@@ -136,65 +125,57 @@ class ConnectionPlatform():
                 entity.origin,
                 entity.destination,
                 entity.combination_id,
-                entity.start_time
+                entity.start_time,
             ):
                 description = DESCRIPTION_HEADER[self.__description_format]
-                connections = ''
-                delay = ''
-                if (self.__api.connection_detail is not None and
-                        len(self.__api.connection_detail) >= 1):
+                connections = ""
+                delay = ""
+                if (
+                    self.__api.connection_detail is not None
+                    and len(self.__api.connection_detail) >= 1
+                ):
                     for i, trains in enumerate(self.__api.connection_detail[0]):
-                        line = trains['line']
-                        depTime = trains['depTime']
-                        depStation = trains['depStation']
-                        arrTime = trains['arrTime']
-                        arrStation = trains['arrStation']
-                        depStationShort = "-" \
-                            + depStation.replace(" (PZ)", "") \
-                            + "-"
+                        line = trains["line"]
+                        depTime = trains["depTime"]
+                        depStation = trains["depStation"]
+                        arrTime = trains["arrTime"]
+                        arrStation = trains["arrStation"]
+                        depStationShort = "-" + depStation.replace(" (PZ)", "") + "-"
                         connections += f'{depStationShort if i > 0 else ""}{line}'
-                        if trains['delay'] != '':
-                            description += ('\n' if i > 0 else '') \
-                                + DESCRIPTION_LINE_DELAY[self.__description_format].format(
-                                    line,
-                                    depTime,
-                                    depStation,
-                                    arrTime,
-                                    arrStation,
-                                    trains["delay"]
-                                )
+                        if trains["delay"] != "":
+                            description += (
+                                "\n" if i > 0 else ""
+                            ) + DESCRIPTION_LINE_DELAY[
+                                self.__description_format
+                            ].format(
+                                line,
+                                depTime,
+                                depStation,
+                                arrTime,
+                                arrStation,
+                                trains["delay"],
+                            )
                             delay += f'{"" if delay=="" else " | "}line {line} - {trains["delay"]}min delay'
                         else:
-                            description += ('\n' if i > 0 else '') \
-                                + DESCRIPTION_LINE_NO_DELAY[self.__description_format].format(
-                                    line,
-                                    depTime,
-                                    depStation,
-                                    arrTime,
-                                    arrStation
-                                )
+                            description += (
+                                "\n" if i > 0 else ""
+                            ) + DESCRIPTION_LINE_NO_DELAY[
+                                self.__description_format
+                            ].format(
+                                line, depTime, depStation, arrTime, arrStation
+                            )
                 description += DESCRIPTION_FOOTER[self.__description_format]
                 entity.update_status(
                     self.__api.departure,
                     self.__api.duration,
-                    self.__api.departure+" ("+connections+")",
+                    self.__api.departure + " (" + connections + ")",
                     connections,
                     description,
                     self.__api.connection_detail,
-                    delay
+                    delay,
                 )
             else:
-                entity.update_status(
-                    '',
-                    '',
-                    STATUS_NO_CONNECTION,
-                    '',
-                    '',
-                    None,
-                    ""
-                )
+                entity.update_status("", "", STATUS_NO_CONNECTION, "", "", None, "")
         async_call_later(
-            self.__hass,
-            self.__scan_interval,
-            self.async_update_Connections()
+            self.__hass, self.__scan_interval, self.async_update_Connections()
         )
