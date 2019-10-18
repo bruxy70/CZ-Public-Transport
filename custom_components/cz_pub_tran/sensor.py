@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from .constants import (
     DOMAIN,
-    COMPONENT_NAME,
+    PLATFORM,
     ENTITY_ID_FORMAT,
     ICON_BUS,
     DESCRIPTION_FORMAT_OPTIONS,
@@ -39,6 +39,10 @@ from homeassistant.helpers.event import async_call_later
 _LOGGER = logging.getLogger(__name__)
 
 HTTP_TIMEOUT = 5
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Setup sensor platform."""
+    async_add_devices([CZPubTranSensor(hass, config_entry.data)], True)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

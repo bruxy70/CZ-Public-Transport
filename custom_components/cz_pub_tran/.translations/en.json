@@ -1,0 +1,47 @@
+{
+    "config": {
+        "title": "CZ Public Transport",
+        "step": {
+            "user": {
+                "title": "CZ Public Transport",
+                "description": "Enter the sensor name and configure sensor parameters. More info on https://github.com/bruxy70/Garbage-Collection",
+                "data": {
+                    "name": "Friendly name",
+                    "origin": "Origin",
+                    "destination": "Destination",
+                    "combination_id": "Combination ID"
+                }
+            }
+        },
+        "error": {
+            "name": "The sensor name cannot be empty. Please enter the sensor name.",
+            "days": "Select 1 or more days!",
+            "month_day": "Invalid date format!",
+            "weekday_order_number": "Select 1 or more days",
+            "period": "Period must be a number between 1 and 52",
+            "first_week": "Firsr week must be a number between 1 and 52",
+            "date": "Invalid date format!"
+            
+        },
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of Garbage Collection is allowed."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "CZ Public Transport",
+                "description": "Change sensor parameters. More info on https://github.com/bruxy70/Garbage-Collection",
+                "data": {
+                    "origin": "Origin",
+                    "destination": "Destination",
+                    "combination_id": "Combination ID"
+                }
+            }
+        },
+        "error": {
+            "date": "Invalid date format!"
+        }
+    }
+
+}

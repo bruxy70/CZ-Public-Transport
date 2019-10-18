@@ -6,6 +6,7 @@ But every 5 minutes it updates all connections regardless - to check on delay
 from czpubtran.api import czpubtran
 import logging
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant import config_entries
 from datetime import datetime, date, time, timedelta
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import (
@@ -15,6 +16,8 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from .constants import (
+    VERSION,
+    ISSUE_URL,
     DESCRIPTION_HEADER,
     DESCRIPTION_FOOTER,
     DESCRIPTION_LINE_DELAY,
@@ -26,20 +29,58 @@ from .constants import (
     CONFIG_SCHEMA,
     SET_START_TIME_SCHEMA,
     ATTR_START_TIME,
-    COMPONENT_NAME,
+    PLATFORM,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 import asyncio
 from homeassistant.helpers.event import async_call_later
+from integrationhelper.const import CC_STARTUP_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
 STATUS_NO_CONNECTION = "-"
 
+async def async_setup_entry(hass, config_entry):
+    """Set up this integration using UI."""
+    if config_entry.source == config_entries.SOURCE_IMPORT:
+        # We get here if the integration is set up using YAML
+        hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
+        return False
+    # Print startup message
+    _LOGGER.info(
+        CC_STARTUP_VERSION.format(name=DOMAIN, version=VERSION, issue_link=ISSUE_URL)
+    )
+    config_entry.options = config_entry.data
+    config_entry.add_update_listener(update_listener)
+    # Add sensor
+    hass.async_add_job(
+        hass.config_entries.async_forward_entry_setup(config_entry, PLATFORM)
+    )
+    return True
+
+
+async def async_remove_entry(hass, config_entry):
+    """Handle removal of an entry."""
+    try:
+        await hass.config_entries.async_forward_entry_unload(config_entry, PLATFORM)
+        _LOGGER.info(
+            "Successfully removed sensor from the garbage_collection integration"
+        )
+    except ValueError:
+        pass
+
+async def update_listener(hass, entry):
+    """Update listener."""
+    entry.data = entry.options
+    await hass.config_entries.async_forward_entry_unload(entry, PLATFORM)
+    hass.async_add_job(hass.config_entries.async_forward_entry_setup(entry, PLATFORM))
 
 async def async_setup(hass, config):
     """Setup the cz_pub_tran platform."""
+    if config.get(DOMAIN) is None:
+        # We get here if the integration is set up using config flow
+        return True
     conf = CONFIG_SCHEMA(config).get(DOMAIN)
     user_id = conf.get(CONF_USERID)
     scan_interval = conf.get(CONF_SCAN_INTERVAL).total_seconds()
@@ -50,7 +91,7 @@ async def async_setup(hass, config):
         hass, user_id, scan_interval, force_refresh_period, description_format, session
     )
     hass.helpers.discovery.load_platform(
-        COMPONENT_NAME, DOMAIN, conf[CONF_SENSORS], config
+        PLATFORM, DOMAIN, conf[CONF_SENSORS], config
     )
     hass.services.async_register(
         DOMAIN,
@@ -58,9 +99,13 @@ async def async_setup(hass, config):
         hass.data[DOMAIN].handle_set_time,
         schema=SET_START_TIME_SCHEMA,
     )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+        )
+    )
     async_call_later(hass, 1, hass.data[DOMAIN].async_update_Connections())
     return True
-
 
 class ConnectionPlatform:
     def __init__(

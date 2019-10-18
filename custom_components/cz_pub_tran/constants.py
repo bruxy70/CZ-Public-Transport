@@ -38,8 +38,12 @@ DESCRIPTION_LINE_NO_DELAY = {
 DESCRIPTION_FOOTER = {"text": "", "HTML": "\n</table>"}
 
 DOMAIN = "cz_pub_tran"
-COMPONENT_NAME = "sensor"
-ENTITY_ID_FORMAT = COMPONENT_NAME + ".{}"
+PLATFORM = "sensor"
+VERSION = "0.0.1"
+ISSUE_URL = "https://github.com/bruxy70/Garbage-Collection/issues"
+ATTRIBUTION = "Data from this is provided by garbage_collection."
+
+ENTITY_ID_FORMAT = PLATFORM + ".{}"
 
 ICON_BUS = "mdi:bus"
 
