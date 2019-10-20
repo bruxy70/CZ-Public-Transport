@@ -40,8 +40,10 @@ _LOGGER = logging.getLogger(__name__)
 
 HTTP_TIMEOUT = 5
 
+
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Setup sensor platform."""
+    _LOGGER.debug(f"async_setup_entry   config_entry.data {config_entry.data}")
     async_add_devices([CZPubTranSensor(hass, config_entry.data)], True)
 
 
@@ -50,6 +52,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
     devs = []
+    _LOGGER.debug(f"async_setup_platform   discovery_info {discovery_info}")
     for sensor in discovery_info:
         devs.append(CZPubTranSensor(hass, SENSOR_SCHEMA(sensor)))
     async_add_entities(devs, True)
@@ -65,6 +68,7 @@ class CZPubTranSensor(Entity):
         self.__destination = config.get(CONF_DESTINATION)
         self.__combination_id = config.get(CONF_COMBINATION_ID)
         self.__forced_refresh_countdown = 1
+        self.__unique_id = config.get("unique_id", None)
         self.__start_time = None
         self.load_defaults()
 
@@ -119,6 +123,10 @@ class CZPubTranSensor(Entity):
     @property
     def icon(self):
         return ICON_BUS
+
+    @property
+    def unique_id(self):
+        return self.__unique_id
 
     def scheduled_connection(self, forced_refresh_period):
         """Return False if Connection needs to be updated."""

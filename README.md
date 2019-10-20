@@ -39,7 +39,12 @@ Connection detail (using markdown custom card, displayed as popup-card)
 4. Restart Home Assistant.
 
 ## Configuration
-Add `cz_pub_tran` sensor in your `configuration.yaml` as per the example below:
+There are 2 ways to configure the integration:
+1. Using *Config Flow*: in `Configuration/Integrations` click on the `+` button, select `CZ Public Transport` and configure the sensor (prefered). If you configure the integration using Config Flow, you can change the entity_name, name and change the sensor parameters from the Integrations configuration. The changes are instant and do not require HA restart.
+2. Using *YAML*: Add `cz_pub_tran` sensor in your `configuration.yaml` as per the example below:
+
+Or you can use combination of both. The configuration of `user_id`, `detail_format`, `scan_interval` and `force_refresh_period` is currently possible only in *YAML*. To configure these, only add these paramaters and no `sensors` configuration, then configure sensors using Home Assistant GUI.
+
 ```yaml
 # Simple example of configuration.yaml (sensors will be named automatically)
 cz_pub_tran:

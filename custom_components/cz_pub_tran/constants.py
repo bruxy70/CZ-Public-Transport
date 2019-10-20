@@ -40,8 +40,8 @@ DESCRIPTION_FOOTER = {"text": "", "HTML": "\n</table>"}
 DOMAIN = "cz_pub_tran"
 PLATFORM = "sensor"
 VERSION = "0.0.1"
-ISSUE_URL = "https://github.com/bruxy70/Garbage-Collection/issues"
-ATTRIBUTION = "Data from this is provided by garbage_collection."
+ISSUE_URL = "https://github.com/bruxy70/CZ-Public-Transport/issues"
+ATTRIBUTION = "Data from this is provided by cz_pub_tran."
 
 ENTITY_ID_FORMAT = PLATFORM + ".{}"
 
@@ -74,7 +74,7 @@ DEFAULT_NAME = "cz_pub_tran"
 
 SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Optional(CONF_COMBINATION_ID, default=DEFAULT_COMBINATION_ID): cv.string,

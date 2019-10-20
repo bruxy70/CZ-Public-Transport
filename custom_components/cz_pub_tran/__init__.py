@@ -41,6 +41,64 @@ _LOGGER = logging.getLogger(__name__)
 
 STATUS_NO_CONNECTION = "-"
 
+
+async def async_setup(hass, config):
+    """Setup the cz_pub_tran platform."""
+    if config.get(DOMAIN) is None:
+        # We get here if the integration is set up using config flow
+        _LOGGER.debug("no domain")
+        conf = CONFIG_SCHEMA({DOMAIN: {}}).get(DOMAIN)
+        user_id = conf.get(CONF_USERID)
+        scan_interval = conf.get(CONF_SCAN_INTERVAL).total_seconds()
+        force_refresh_period = conf.get(CONF_FORCE_REFRESH_PERIOD)
+        description_format = conf.get(CONF_DESCRIPTION_FORMAT)
+        session = async_get_clientsession(hass)
+        hass.data[DOMAIN] = ConnectionPlatform(
+            hass,
+            user_id,
+            scan_interval,
+            force_refresh_period,
+            description_format,
+            session,
+        )
+    else:
+        _LOGGER.debug("domain")
+        conf = CONFIG_SCHEMA(config).get(DOMAIN)
+        user_id = conf.get(CONF_USERID)
+        scan_interval = conf.get(CONF_SCAN_INTERVAL).total_seconds()
+        force_refresh_period = conf.get(CONF_FORCE_REFRESH_PERIOD)
+        description_format = conf.get(CONF_DESCRIPTION_FORMAT)
+        session = async_get_clientsession(hass)
+        hass.data[DOMAIN] = ConnectionPlatform(
+            hass,
+            user_id,
+            scan_interval,
+            force_refresh_period,
+            description_format,
+            session,
+        )
+        if conf.get(CONF_SENSORS) is not None:
+            hass.helpers.discovery.load_platform(
+                PLATFORM, DOMAIN, conf[CONF_SENSORS], config
+            )
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+            )
+        )
+    if DOMAIN not in hass.services.async_services():
+        hass.services.async_register(
+            DOMAIN,
+            "set_start_time",
+            hass.data[DOMAIN].handle_set_time,
+            schema=SET_START_TIME_SCHEMA,
+        )
+        async_call_later(hass, 1, hass.data[DOMAIN].async_update_Connections())
+    else:
+        _LOGGER.debug("Service already registered and update scheduled")
+    return True
+
+
 async def async_setup_entry(hass, config_entry):
     """Set up this integration using UI."""
     if config_entry.source == config_entries.SOURCE_IMPORT:
@@ -70,42 +128,13 @@ async def async_remove_entry(hass, config_entry):
     except ValueError:
         pass
 
+
 async def update_listener(hass, entry):
     """Update listener."""
     entry.data = entry.options
     await hass.config_entries.async_forward_entry_unload(entry, PLATFORM)
     hass.async_add_job(hass.config_entries.async_forward_entry_setup(entry, PLATFORM))
 
-async def async_setup(hass, config):
-    """Setup the cz_pub_tran platform."""
-    if config.get(DOMAIN) is None:
-        # We get here if the integration is set up using config flow
-        return True
-    conf = CONFIG_SCHEMA(config).get(DOMAIN)
-    user_id = conf.get(CONF_USERID)
-    scan_interval = conf.get(CONF_SCAN_INTERVAL).total_seconds()
-    force_refresh_period = conf.get(CONF_FORCE_REFRESH_PERIOD)
-    description_format = conf.get(CONF_DESCRIPTION_FORMAT)
-    session = async_get_clientsession(hass)
-    hass.data[DOMAIN] = ConnectionPlatform(
-        hass, user_id, scan_interval, force_refresh_period, description_format, session
-    )
-    hass.helpers.discovery.load_platform(
-        PLATFORM, DOMAIN, conf[CONF_SENSORS], config
-    )
-    hass.services.async_register(
-        DOMAIN,
-        "set_start_time",
-        hass.data[DOMAIN].handle_set_time,
-        schema=SET_START_TIME_SCHEMA,
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
-        )
-    )
-    async_call_later(hass, 1, hass.data[DOMAIN].async_update_Connections())
-    return True
 
 class ConnectionPlatform:
     def __init__(
@@ -119,12 +148,21 @@ class ConnectionPlatform:
     ):
         self.__hass = hass
         self.__user_id = user_id
+        self.__session = session
         self.__scan_interval = scan_interval
         self.__force_refresh_period = force_refresh_period
         self.__description_format = description_format
         self.__entity_ids = []
         self.__connections = []
         self.__api = czpubtran(session, user_id)
+
+    @property
+    def user_id(self):
+        return self.__user_id
+
+    @property
+    def session(self):
+        return self.__session
 
     def handle_set_time(self, call):
         """Handle the cz_pub_tran.set_time call"""
