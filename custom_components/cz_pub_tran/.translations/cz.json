@@ -1,0 +1,37 @@
+{
+    "config": {
+        "title": "CZ Public Transport",
+        "step": {
+            "user": {
+                "title": "CZ Public Transport",
+                "description": "Zadej jméno sensoru a parametry. Více na https://github.com/bruxy70/CZ-Public-Transport",
+                "data": {
+                    "name": "Friendly name",
+                    "origin": "Nástup",
+                    "destination": "Výstup",
+                    "combination_id": "Combination ID"
+                }
+            }
+        },
+        "error": {
+            "name": "Jméno nemůže být prázdné"
+        },
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of Garbage Collection is allowed."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "CZ Public Transport",
+                "description": "Změna parametrů. Více na https://github.com/bruxy70/CZ-Public-Transport",
+                "data": {
+                    "origin": "Nástup",
+                    "destination": "Výstup",
+                    "combination_id": "Combination ID"
+                }
+            }
+        }
+    }
+
+}

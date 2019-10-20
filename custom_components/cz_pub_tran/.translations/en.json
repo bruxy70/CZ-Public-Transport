@@ -1,0 +1,37 @@
+{
+    "config": {
+        "title": "CZ Public Transport",
+        "step": {
+            "user": {
+                "title": "CZ Public Transport",
+                "description": "Enter the sensor name and configure sensor parameters. More info on https://github.com/bruxy70/CZ-Public-Transport",
+                "data": {
+                    "name": "Friendly name",
+                    "origin": "Origin",
+                    "destination": "Destination",
+                    "combination_id": "Combination ID"
+                }
+            }
+        },
+        "error": {
+            "name": "The sensor name cannot be empty. Please enter the sensor name."
+        },
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of Garbage Collection is allowed."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "CZ Public Transport",
+                "description": "Change sensor parameters. More info on https://github.com/bruxy70/CZ-Public-Transport",
+                "data": {
+                    "origin": "Origin",
+                    "destination": "Destination",
+                    "combination_id": "Combination ID"
+                }
+            }
+        }
+    }
+
+}

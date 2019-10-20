@@ -15,7 +15,12 @@ Connection detail (using markdown custom card, displayed as popup-card)
 
 
 ## Configuration
-Add `cz_pub_tran` sensor in your `configuration.yaml` as per the example below:
+There are 2 ways to configure the integration:
+1. Using *Config Flow*: in `Configuration/Integrations` click on the `+` button, select `CZ Public Transport` and configure the sensor (prefered). If you configure the integration using Config Flow, you can change the entity_name, name and change the sensor parameters from the Integrations configuration. The changes are instant and do not require HA restart.
+2. Using *YAML*: Add `cz_pub_tran` sensor in your `configuration.yaml` as per the example below:
+
+Or you can use combination of both. The configuration of `user_id`, `detail_format`, `scan_interval` and `force_refresh_period` is currently possible only in *YAML*. To configure these, only add these paramaters and no `sensors` configuration, then configure sensors using Home Assistant GUI.
+
 ```yaml
 # Simple example configuration.yaml
 cz_pub_tran:
@@ -28,19 +33,6 @@ cz_pub_tran:
 ```
 
 For more detailed configuration please look at the <a href="https://github.com/bruxy70/CZ-Public-Transport/blob/master/README.md">README.md</a>
-
-### CONFIGURATION PARAMETERS
-| Attribute | Optional | Description
-|:---------|-----------|-----------
-| `cz_pub_tran` | No | This is the platform name
-| `user_id` | Yes | ...if you have one (if you do, please let me know where you got it. Thanks!). Otherwise it will use the trial account. 
-| `scan_interval` | Yes | The sensor refresh rate (seconds)<br/>**Default**: 60
-| `force_refresh_period` | Yes | The sensor will skip update if there is already scheduled connection. But, every n-th refresh, it will force the update, to check delay changes. This can be disabled by setting this to 0.<br/>**Default**: 5  **Range**: 0-60
-| `description_format` | Yes | The **description** attribute can be rendered in 2 different formats:<br/>- **text**: plain text, each connection on 1 line (**default**)<br/>- **HTML**: HTML table
-| `name` | Yes | Sensor friendly name.<br/>**Default**: cz_pub_tran
-| `origin` | No | Name of the originating bus stop
-| `destination` | No | Name of the destination bus stop
-| `combination_id` | Yes | Name of the combination of timetables.<br/>**Default**: `ABCz`
 
 ## STATE AND ATTRIBUTES
 ### STATE
