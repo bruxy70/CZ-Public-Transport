@@ -1,6 +1,8 @@
 {
   "name": "CZ Public Transport",
   "domains": ["cz_pub_tran", "sensor"],
+  "zip_release": true,
+  "filename": "cz_pub_tran.zip",  
   "country": "CZ",
   "iot_class": "Cloud Polling"
 }
