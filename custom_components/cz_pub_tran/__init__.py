@@ -35,7 +35,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 import asyncio
 from homeassistant.helpers.event import async_call_later
-from integrationhelper.const import CC_STARTUP_VERSION
+# from integrationhelper.const import CC_STARTUP_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,9 +106,9 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
         return False
     # Print startup message
-    _LOGGER.info(
-        CC_STARTUP_VERSION.format(name=DOMAIN, version=VERSION, issue_link=ISSUE_URL)
-    )
+    # _LOGGER.info(
+    #     CC_STARTUP_VERSION.format(name=DOMAIN, version=VERSION, issue_link=ISSUE_URL)
+    # )
     config_entry.options = config_entry.data
     config_entry.add_update_listener(update_listener)
     # Add sensor
