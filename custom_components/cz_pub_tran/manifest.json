@@ -4,7 +4,6 @@
   "documentation": "https://github.com/bruxy70/CZ-Public-Transport/",
   "requirements": [
     "asyncio",
-    "collections",
     "czpubtran>=0.1.21",
     "datetime",
     "integrationhelper",

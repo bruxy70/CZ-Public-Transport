@@ -34,7 +34,6 @@ from .constants import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 import asyncio
-from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
 
