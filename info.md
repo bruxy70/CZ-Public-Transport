@@ -53,4 +53,4 @@ The next connection short description in format *time (bus line)*. If there are 
 | `detail` | A list of 2 connections. Each connection is a dictionary of values (see the example at the end of <a href="https://github.com/bruxy70/CZ-Public-Transport/blob/master/README.md">README.md</a>)
 
 ## SERVICE sensor.set_start_time
-Set the time to start searching for connections - see <a href="https://github.com/bruxy70/CZ-Public-Transport/blob/master/README.md">README.md</a>) for details
+Set the time to start searching for connections - see <a href="https://github.com/bruxy70/CZ-Public-Transport/blob/master/README.md">README.md</a> for details
