@@ -1,39 +1,42 @@
 """Support for cz_pub_tran sensors."""
-import voluptuous as vol
+import asyncio
 import logging
-from homeassistant.helpers import config_validation as cv, discovery
-from datetime import datetime, date, time, timedelta
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from datetime import date, datetime, time, timedelta
+
+import voluptuous as vol
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_SENSORS,
     CONF_ENTITY_ID,
     CONF_NAME,
-)
-from .constants import (
-    DOMAIN,
-    PLATFORM,
-    ENTITY_ID_FORMAT,
-    ICON_BUS,
-    DESCRIPTION_FORMAT_OPTIONS,
-    CONF_ORIGIN,
-    CONF_DESTINATION,
-    CONF_USERID,
-    CONF_COMBINATION_ID,
-    CONF_FORCE_REFRESH_PERIOD,
-    CONF_DESCRIPTION_FORMAT,
-    ATTR_DURATION,
-    ATTR_DEPARTURE,
-    ATTR_CONNECTIONS,
-    ATTR_DESCRIPTION,
-    ATTR_DETAIL,
-    ATTR_START_TIME,
-    ATTR_DELAY,
-    SENSOR_SCHEMA,
+    CONF_SCAN_INTERVAL,
+    CONF_SENSORS,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import discovery
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
-import asyncio
+
+from .constants import (
+    ATTR_CONNECTIONS,
+    ATTR_DELAY,
+    ATTR_DEPARTURE,
+    ATTR_DESCRIPTION,
+    ATTR_DETAIL,
+    ATTR_DURATION,
+    ATTR_START_TIME,
+    CONF_COMBINATION_ID,
+    CONF_DESCRIPTION_FORMAT,
+    CONF_DESTINATION,
+    CONF_FORCE_REFRESH_PERIOD,
+    CONF_ORIGIN,
+    CONF_USERID,
+    DESCRIPTION_FORMAT_OPTIONS,
+    DOMAIN,
+    ENTITY_ID_FORMAT,
+    ICON_BUS,
+    PLATFORM,
+    SENSOR_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

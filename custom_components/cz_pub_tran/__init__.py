@@ -3,39 +3,42 @@ The async_update connections checks all connections every minute
 If the connection is scheduled, it skips the update.
 But every 5 minutes it updates all connections regardless - to check on delay
 """
-from czpubtran.api import czpubtran
+import asyncio
 import logging
-from homeassistant.helpers import config_validation as cv, discovery
+from datetime import date, datetime, time, timedelta
+
+from czpubtran.api import czpubtran
 from homeassistant import config_entries
-from datetime import datetime, date, time, timedelta
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_SENSORS,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    CONF_SENSORS,
 )
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import discovery
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.event import async_call_later
+from integrationhelper.const import CC_STARTUP_VERSION
+
 from .constants import (
-    VERSION,
-    ISSUE_URL,
-    DESCRIPTION_HEADER,
+    ATTR_START_TIME,
+    CONF_DESCRIPTION_FORMAT,
+    CONF_FORCE_REFRESH_PERIOD,
+    CONF_USERID,
+    CONFIG_SCHEMA,
     DESCRIPTION_FOOTER,
+    DESCRIPTION_HEADER,
     DESCRIPTION_LINE_DELAY,
     DESCRIPTION_LINE_NO_DELAY,
     DOMAIN,
-    CONF_USERID,
-    CONF_FORCE_REFRESH_PERIOD,
-    CONF_DESCRIPTION_FORMAT,
-    CONFIG_SCHEMA,
-    SET_START_TIME_SCHEMA,
-    ATTR_START_TIME,
+    ISSUE_URL,
     PLATFORM,
+    SET_START_TIME_SCHEMA,
+    VERSION,
 )
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
-import asyncio
-from homeassistant.helpers.event import async_call_later
-from integrationhelper.const import CC_STARTUP_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,6 +140,7 @@ async def update_listener(hass, entry):
 
 
 class ConnectionPlatform:
+    """Store API connection data."""
     def __init__(
         self,
         hass,
@@ -146,6 +150,7 @@ class ConnectionPlatform:
         description_format,
         session,
     ):
+        """Initialize the class attributes."""
         self.__hass = hass
         self.__user_id = user_id
         self.__session = session
@@ -158,14 +163,16 @@ class ConnectionPlatform:
 
     @property
     def user_id(self):
+        """Return user_id attribute."""
         return self.__user_id
 
     @property
     def session(self):
+        """Return the session parameter."""
         return self.__session
 
     def handle_set_time(self, call):
-        """Handle the cz_pub_tran.set_time call"""
+        """Handle the cz_pub_tran.set_time call."""
         _time = call.data.get(ATTR_START_TIME)
         _entity_id = call.data.get(CONF_ENTITY_ID)
         if _time is None:
@@ -188,15 +195,19 @@ class ConnectionPlatform:
             async_call_later(self.__hass, 0, self.async_update_Connections())
 
     def add_sensor(self, sensor):
+        """Add new connection."""
         self.__connections.append(sensor)
 
     def entity_ids(self):
+        """Return list of entity_ids."""
         return self.__entity_ids
 
     def add_entity_id(self, id):
+        """Register entity_id."""
         self.__entity_ids.append(id)
 
     async def async_update_Connections(self):
+        """Update all sensors."""
         for entity in self.__connections:
             if entity.scheduled_connection(self.__force_refresh_period):
                 # _LOGGER.debug(
