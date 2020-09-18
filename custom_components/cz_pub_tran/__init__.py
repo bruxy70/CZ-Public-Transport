@@ -189,10 +189,10 @@ class ConnectionPlatform:
             None,
         )
         if entity is not None:
-            if _time is None:
-                entity.start_time = None
-            else:
+            try:
                 entity.start_time = _time.strftime("%H:%M")
+            except AttributeError:
+                entity.start_time = None
             entity.load_defaults()
             async_call_later(self._hass, 0, self.async_update_Connections())
 
