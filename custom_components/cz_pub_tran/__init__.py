@@ -1,4 +1,5 @@
-"""Support for cz_pub_tran domain
+"""Support for cz_pub_tran domain.
+
 The async_update connections checks all connections every minute
 If the connection is scheduled, it skips the update.
 But every 5 minutes it updates all connections regardless - to check on delay
@@ -46,7 +47,7 @@ STATUS_NO_CONNECTION = "-"
 
 
 async def async_setup(hass, config):
-    """Setup the cz_pub_tran platform."""
+    """Initialise the cz_pub_tran integration platform."""
     if config.get(DOMAIN) is None:
         # We get here if the integration is set up using config flow
         _LOGGER.debug("no domain")
@@ -141,6 +142,7 @@ async def update_listener(hass, entry):
 
 class ConnectionPlatform:
     """Store API connection data."""
+    
     def __init__(
         self,
         hass,
