@@ -44,13 +44,13 @@ HTTP_TIMEOUT = 5
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Setup sensor platform."""
+    """Add devices for sensor config flow."""
     _LOGGER.debug(f"async_setup_entry   config_entry.data {config_entry.data}")
     async_add_devices([CZPubTranSensor(hass, config_entry.data)], True)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Setup the sensor platform."""
+    """Add devices for platform (YAML)."""
     if discovery_info is None:
         return
     devs = []
@@ -65,80 +65,82 @@ class CZPubTranSensor(Entity):
 
     def __init__(self, hass, config):
         """Initialize the sensor."""
-        self.__name = config.get(CONF_NAME)
-        self.__origin = config.get(CONF_ORIGIN)
-        self.__destination = config.get(CONF_DESTINATION)
-        self.__combination_id = config.get(CONF_COMBINATION_ID)
-        self.__forced_refresh_countdown = 1
-        self.__unique_id = config.get("unique_id", None)
-        self.__start_time = None
+        self._name = config.get(CONF_NAME)
+        self._origin = config.get(CONF_ORIGIN)
+        self._destination = config.get(CONF_DESTINATION)
+        self._combination_id = config.get(CONF_COMBINATION_ID)
+        self._forced_refresh_countdown = 1
+        self._unique_id = config.get("unique_id", None)
+        self._start_time = None
         self.load_defaults()
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.__name
+        return self._name
 
     @property
     def origin(self):
         """Return the origin."""
-        return self.__origin
+        return self._origin
 
     @property
     def destination(self):
         """Return the destination."""
-        return self.__destination
+        return self._destination
 
     @property
     def combination_id(self):
         """Return the combination id."""
-        return self.__combination_id
+        return self._combination_id
 
     @property
     def start_time(self):
         """Return the start time."""
-        return self.__start_time
+        return self._start_time
 
     @start_time.setter
     def start_time(self, value):
         """Sets start time property"""
-        self.__start_time = value
+        self._start_time = value
 
     @property
     def state(self):
         """Return the name of the sensor."""
-        return self.__state
+        return self._state
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         res = {}
-        res[ATTR_DEPARTURE] = self.__departure
-        res[ATTR_DURATION] = self.__duration
-        res[ATTR_DELAY] = self.__delay
-        res[ATTR_CONNECTIONS] = self.__connections
-        res[ATTR_DESCRIPTION] = self.__description
-        res[ATTR_START_TIME] = self.__start_time
-        res[ATTR_DETAIL] = self.__detail
+        res[ATTR_DEPARTURE] = self._departure
+        res[ATTR_DURATION] = self._duration
+        res[ATTR_DELAY] = self._delay
+        res[ATTR_CONNECTIONS] = self._connections
+        res[ATTR_DESCRIPTION] = self._description
+        res[ATTR_START_TIME] = self._start_time
+        res[ATTR_DETAIL] = self._detail
         return res
 
     @property
     def icon(self):
+        """Return the icon - constant."""
         return ICON_BUS
 
     @property
     def unique_id(self):
-        return self.__unique_id
+        """Return unique_id."""
+        return self._unique_id
 
     def scheduled_connection(self, forced_refresh_period):
         """Return False if Connection needs to be updated."""
         try:
-            if self.__forced_refresh_countdown <= 0 or self.__departure == "":
-                self.__forced_refresh_countdown = (
+            if self._forced_refresh_countdown <= 0 or self._departure == "":
+                self._forced_refresh_countdown = (
                     forced_refresh_period if forced_refresh_period > 0 else 1
                 )
                 return False
-            departure_time = datetime.strptime(self.__departure, "%H:%M").time()
+            departure_time = datetime.strptime(self._departure, "%H:%M").time()
             now = datetime.now().time()
             connection_valid = bool(
                 now < departure_time or (now.hour > 22 and departure_time < 6)
@@ -149,10 +151,10 @@ class CZPubTranSensor(Entity):
                 )
             else:
                 if connection_valid:
-                    self.__forced_refresh_countdown -= 1
+                    self._forced_refresh_countdown -= 1
                     return True
                 else:
-                    self.__forced_refresh_countdown = forced_refresh_period
+                    self._forced_refresh_countdown = forced_refresh_period
                     return False
         except:
             return False  # Refresh data on Error
@@ -160,15 +162,17 @@ class CZPubTranSensor(Entity):
     def update_status(
         self, departure, duration, state, connections, description, detail, delay
     ):
-        self.__departure = departure
-        self.__duration = duration
-        self.__state = state
-        self.__connections = connections
-        self.__description = description
-        self.__detail = detail
-        self.__delay = delay
+        """Update the status from parameters."""
+        self._departure = departure
+        self._duration = duration
+        self._state = state
+        self._connections = connections
+        self._description = description
+        self._detail = detail
+        self._delay = delay
 
     def load_defaults(self):
+        """Initiate empty defaults."""
         self.update_status("", "", "", "", "", [[], []], "")
 
     async def async_added_to_hass(self):
