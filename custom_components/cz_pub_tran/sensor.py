@@ -176,6 +176,6 @@ class CZPubTranSensor(Entity):
         self.update_status("", "", "", "", "", [[], []], "")
 
     async def async_added_to_hass(self):
-        """Entity added. Entity ID ready"""
+        """Entity added. Entity ID ready."""
         self.hass.data[DOMAIN].add_entity_id(self.entity_id)
         self.hass.data[DOMAIN].add_sensor(self)
