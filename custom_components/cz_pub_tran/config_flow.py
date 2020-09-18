@@ -45,7 +45,7 @@ class CZPubTranFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(
         self, user_input={}
     ):  # pylint: disable=dangerous-default-value
-        """CONFIG FLOW"""
+        """Display the form, then store values and create entry."""
         self._errors = {}
         if user_input is not None:
             if user_input[CONF_NAME] != "":
@@ -61,7 +61,7 @@ class CZPubTranFlowHandler(config_entries.ConfigFlow):
         return await self._show_user_form(user_input)
 
     async def _show_user_form(self, user_input):
-        """SHOW FORM"""
+        """Configure the form."""
         # Defaults
         name = ""
         origin = ""
@@ -106,6 +106,7 @@ class CZPubTranFlowHandler(config_entries.ConfigFlow):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
+        """Return the options flow handler."""
         if config_entry.options.get("unique_id", None) is not None:
             return OptionsFlowHandler(config_entry)
         else:
@@ -113,12 +114,15 @@ class CZPubTranFlowHandler(config_entries.ConfigFlow):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Change the configuration."""
+
     def __init__(self, config_entry):
+        """Read the configuration and initialize data."""
         self.config_entry = config_entry
         self._data = config_entry.options
 
     async def async_step_init(self, user_input=None):
-        """OPTION FLOW"""
+        """Display the form, then store values and create entry."""
         self._errors = {}
         if user_input is not None:
             # Update entry
@@ -127,7 +131,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return await self._show_init_form(user_input)
 
     async def _show_init_form(self, user_input):
-        """SHOW FORM"""
+        """Configure the form."""
         pubtran = czpubtran(
             self.hass.data[DOMAIN].session, self.hass.data[DOMAIN].user_id
         )
@@ -156,5 +160,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
 
 class EmptyOptions(config_entries.OptionsFlow):
+    """Empty class in to be used if no configuration."""
+
     def __init__(self, config_entry):
+        """Initialize data."""
         self.config_entry = config_entry

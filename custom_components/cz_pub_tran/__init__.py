@@ -142,7 +142,7 @@ async def update_listener(hass, entry):
 
 class ConnectionPlatform:
     """Store API connection data."""
-    
+
     def __init__(
         self,
         hass,
@@ -241,9 +241,7 @@ class ConnectionPlatform:
                         if trains["delay"] != "":
                             description += (
                                 "\n" if i > 0 else ""
-                            ) + DESCRIPTION_LINE_DELAY[
-                                self._description_format
-                            ].format(
+                            ) + DESCRIPTION_LINE_DELAY[self._description_format].format(
                                 line,
                                 depTime,
                                 depStation,

@@ -1,16 +1,15 @@
-"""
-Text constants for cz_pub_tran sensor
-"""
-import voluptuous as vol
-from homeassistant.helpers import config_validation as cv
-from datetime import datetime, date, time, timedelta
+"""Text constants for cz_pub_tran sensor."""
 
+from datetime import date, datetime, time, timedelta
+
+import voluptuous as vol
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_SENSORS,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    CONF_SENSORS,
 )
+from homeassistant.helpers import config_validation as cv
 
 DESCRIPTION_HEADER = {
     "text": "",
