@@ -101,7 +101,7 @@ class CZPubTranSensor(Entity):
 
     @start_time.setter
     def start_time(self, value):
-        """Sets start time property"""
+        """Set start time property."""
         self._start_time = value
 
     @property
