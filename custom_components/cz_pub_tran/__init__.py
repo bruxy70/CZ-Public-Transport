@@ -204,11 +204,21 @@ class ConnectionPlatform:
                 #     f'for {entity.departure} - not checking connections'
                 # )
                 continue
+            if entity.offset:
+                _offset_delta = timedelta(seconds=entity.offset)
+                if entity.start_time is None:
+                    entity.start_time_incl_offset = \
+                        (datetime.now() + _offset_delta).strftime("%H:%M")
+                else:
+                    _start_datetime = datetime.strptime(entity.start_time, "%H:%M")
+                    entity.start_time_incl_offset = \
+                        (_start_datetime + _offset_delta).strftime("%H:%M")
+
             if await self.__api.async_find_connection(
                 entity.origin,
                 entity.destination,
                 entity.combination_id,
-                entity.start_time,
+                entity.start_time_incl_offset or entity.start_time,
             ):
                 description = DESCRIPTION_HEADER[self.__description_format]
                 connections = ""

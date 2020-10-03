@@ -85,6 +85,7 @@ cz_pub_tran:
 | `origin` | No | Name of the originating bus stop
 | `destination` | No | Name of the destination bus stop
 | `combination_id` | Yes | Name of the combination of timetables.<br/>**Default**: `ABCz`
+| `offset` | Yes | Offset for a search start time (in seconds). Represents the time needed to walk to the bus stop.<br/>**Default**: `0`
 
 ## STATE AND ATTRIBUTES
 ### STATE
