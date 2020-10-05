@@ -51,6 +51,7 @@ DESCRIPTION_FORMAT_OPTIONS = ["HTML", "text"]
 
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
+CONF_OFFSET = "offset"
 CONF_USERID = "userId"
 CONF_COMBINATION_ID = "combination_id"
 CONF_FORCE_REFRESH_PERIOD = "force_refresh_period"
@@ -62,6 +63,7 @@ ATTR_CONNECTIONS = "connections"
 ATTR_DESCRIPTION = "description"
 ATTR_DETAIL = "detail"
 ATTR_START_TIME = "start_time"
+ATTR_START_TIME_INCL_OFFSET = "start_time_incl_offset"
 ATTR_DELAY = "delay"
 
 TRACKABLE_DOMAINS = ["sensor"]
@@ -70,6 +72,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_FORCE_REFRESH_PERIOD = 5
 DEFAULT_DESCRIPTION_FORMAT = "text"
 DEFAULT_COMBINATION_ID = "ABCz"
+DEFAULT_OFFSET = 0
 DEFAULT_NAME = "cz_pub_tran"
 
 SENSOR_SCHEMA = vol.Schema(
@@ -77,6 +80,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
+        vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): cv.positive_int,
         vol.Optional(CONF_COMBINATION_ID, default=DEFAULT_COMBINATION_ID): cv.string,
     }
 )

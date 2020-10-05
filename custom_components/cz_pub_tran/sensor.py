@@ -18,6 +18,7 @@ from .constants import (
     DESCRIPTION_FORMAT_OPTIONS,
     CONF_ORIGIN,
     CONF_DESTINATION,
+    CONF_OFFSET,
     CONF_USERID,
     CONF_COMBINATION_ID,
     CONF_FORCE_REFRESH_PERIOD,
@@ -28,6 +29,7 @@ from .constants import (
     ATTR_DESCRIPTION,
     ATTR_DETAIL,
     ATTR_START_TIME,
+    ATTR_START_TIME_INCL_OFFSET,
     ATTR_DELAY,
     SENSOR_SCHEMA,
 )
@@ -65,10 +67,12 @@ class CZPubTranSensor(Entity):
         self.__name = config.get(CONF_NAME)
         self.__origin = config.get(CONF_ORIGIN)
         self.__destination = config.get(CONF_DESTINATION)
+        self.__offset = config.get(CONF_OFFSET)
         self.__combination_id = config.get(CONF_COMBINATION_ID)
         self.__forced_refresh_countdown = 1
         self.__unique_id = config.get("unique_id", None)
         self.__start_time = None
+        self.__start_time_incl_offset = None
         self.load_defaults()
 
     @property
@@ -87,6 +91,11 @@ class CZPubTranSensor(Entity):
         return self.__destination
 
     @property
+    def offset(self):
+        """Return the offset."""
+        return self.__offset
+
+    @property
     def combination_id(self):
         """Return the combination id."""
         return self.__combination_id
@@ -100,6 +109,16 @@ class CZPubTranSensor(Entity):
     def start_time(self, value):
         """Sets start time property"""
         self.__start_time = value
+
+    @property
+    def start_time_incl_offset(self):
+        """Return the start time incl. offset."""
+        return self.__start_time_incl_offset
+
+    @start_time_incl_offset.setter
+    def start_time_incl_offset(self, value):
+        """Sets start time property (incl. offset)"""
+        self.__start_time_incl_offset = value
 
     @property
     def state(self):
@@ -116,6 +135,7 @@ class CZPubTranSensor(Entity):
         res[ATTR_CONNECTIONS] = self.__connections
         res[ATTR_DESCRIPTION] = self.__description
         res[ATTR_START_TIME] = self.__start_time
+        res[ATTR_START_TIME_INCL_OFFSET] = self.__start_time_incl_offset
         res[ATTR_DETAIL] = self.__detail
         return res
 
