@@ -1,4 +1,4 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs) [![CZ-Public-Transport](https://img.shields.io/github/v/release/bruxy70/CZ-Public-Transport.svg?1)](https://github.com/bruxy70/CZ-Public-Transport) ![Maintenance](https://img.shields.io/maintenance/yes/2019.svg)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration) [![CZ-Public-Transport](https://img.shields.io/github/v/release/bruxy70/CZ-Public-Transport.svg?1)](https://github.com/bruxy70/CZ-Public-Transport) ![Maintenance](https://img.shields.io/maintenance/yes/2022.svg)
 
 [![Buy me a coffee](https://img.shields.io/static/v1.svg?label=Buy%20me%20a%20coffee&message=🥨&color=black&logo=buy%20me%20a%20coffee&logoColor=white&labelColor=6f4e37)](https://www.buymeacoffee.com/3nXx0bJDP)
 
@@ -36,7 +36,7 @@ Connection detail (using markdown custom card, displayed as popup-card)
 4. Restart Home Assistant.
 
 ### INSTALLATION VIA HACS
-1. Ensure that [HACS](https://custom-components.github.io/hacs/) is installed.
+1. Ensure that [HACS](https://hacs.xyz/) is installed.
 2. Search for and install the "CZ Public Transport" integration.
 3. Configure the `cz_pub_tran` sensor.
 4. Restart Home Assistant.
